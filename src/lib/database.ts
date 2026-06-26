@@ -1,9 +1,21 @@
 import { Pool, PoolClient } from "pg";
 
+// Postgres TLS mode, configurable via DATABASE_SSL:
+//   unset | "false" | "disable"  -> no TLS (default; correct for a private
+//                                   Docker network where the server has SSL off)
+//   "true"  | "require"          -> TLS with full certificate verification
+//   "no-verify" | "insecure"     -> TLS but accept self-signed certificates
+function resolvePgSsl(): false | { rejectUnauthorized: boolean } {
+  const mode = (process.env.DATABASE_SSL || "false").toLowerCase();
+  if (["", "false", "disable", "off"].includes(mode)) return false;
+  if (["no-verify", "insecure"].includes(mode)) return { rejectUnauthorized: false };
+  return { rejectUnauthorized: true };
+}
+
 // PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: false,
+  ssl: resolvePgSsl(),
   max: 5, // Maximum number of clients in the pool (reduced from 20)
   idleTimeoutMillis: 10000, // Close idle clients after 10 seconds (reduced from 30s)
   connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection could not be established
