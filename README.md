@@ -216,28 +216,11 @@ const response = await fetch("https://your-freeresend-domain.com/api/emails", {
 
 ## Testing Your Setup
 
-FreeResend includes test scripts to verify your installation:
-
-### Quick Test
+### Tests
 
 ```bash
-# Test with cURL (update variables in script first)
-./test-curl.sh
+npm test
 ```
-
-### Comprehensive Test
-
-```bash
-# Test direct API + Resend SDK compatibility + Email logs
-node test-email.js
-```
-
-Both scripts will:
-
-- ✅ Send test emails using your API key
-- ✅ Verify Resend SDK compatibility
-- ✅ Check email logs functionality
-- 📧 Send actual emails to your inbox for verification
 
 ## Troubleshooting
 
@@ -352,8 +335,6 @@ freeresend/
 │       └── middleware.ts   # API middleware
 ├── database.sql            # Database schema
 ├── docker-compose.yml      # Development setup
-├── test-email.js          # Comprehensive test script
-├── test-curl.sh           # Quick cURL test
 └── README.md              # This file
 ```
 
@@ -367,7 +348,7 @@ We welcome contributions! Here's how to get started:
 2. **Clone your fork**: `git clone <your-repo-url>`
 3. **Install dependencies**: `npm install`
 4. **Set up environment** following the Quick Start guide above
-5. **Run tests**: `node test-email.js`
+5. **Run tests**: `npm test`
 6. **Start development**: `npm run dev`
 
 ### Contributing Guidelines

@@ -15,11 +15,7 @@ Thank you for your interest in contributing to FreeResend! This document provide
    npm install
    ```
 4. **Set up your environment** following the [README.md](README.md) Quick Start guide
-5. **Test your setup**:
-   ```bash
-   node test-email.js
-   ```
-6. **Start development**:
+5. **Start development**:
    ```bash
    npm run dev
    ```
@@ -104,12 +100,6 @@ src/
 ### Running Tests
 
 ```bash
-# Test email functionality (requires setup)
-node test-email.js
-
-# Test with cURL
-./test-curl.sh
-
 # Lint code
 npm run lint
 
@@ -145,7 +135,6 @@ npm run type-check
 
 ## Testing
 
-- [ ] Tested locally with `node test-email.js`
 - [ ] Tested new functionality manually
 - [ ] Updated documentation
 - [ ] No breaking changes (or documented)

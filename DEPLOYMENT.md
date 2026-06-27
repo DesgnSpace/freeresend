@@ -157,11 +157,7 @@ vercel logs
 node -e "const { Client } = require('pg'); const client = new Client(process.env.DATABASE_URL); client.connect().then(() => console.log('Connected!')).catch(console.error);"
 ```
 
-**Email Sending:**
-```bash
-# Test email functionality
-node test-email.js
-```
+
 
 ### 10. Maintenance
 
