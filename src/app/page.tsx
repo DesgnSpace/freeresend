@@ -1,11 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import LandingPage from "@/components/LandingPage";
-import Dashboard from "@/components/Dashboard";
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/domains");
+    }
+  }, [user, loading, router]);
 
   if (loading) {
     return (
@@ -15,11 +23,7 @@ export default function Home() {
     );
   }
 
-  // Show dashboard if user is authenticated
-  if (user) {
-    return <Dashboard />;
-  }
+  if (user) return null;
 
-  // Show landing page for unauthenticated users
   return <LandingPage />;
 }
