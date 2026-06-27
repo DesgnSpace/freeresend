@@ -64,6 +64,18 @@ CREATE TABLE IF NOT EXISTS email_logs (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Per-open / per-click engagement events (one row each time SES reports an
+-- open or click — opens fire on every pixel load, so this can be many per email).
+CREATE TABLE IF NOT EXISTS email_events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email_log_id UUID REFERENCES email_logs(id) ON DELETE CASCADE,
+  type VARCHAR(20) NOT NULL, -- open | click
+  link TEXT,                 -- destination URL, for clicks
+  ip_address VARCHAR(64),
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Webhook events table
 CREATE TABLE IF NOT EXISTS webhook_events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -84,6 +96,8 @@ CREATE INDEX IF NOT EXISTS idx_email_logs_api_key_id ON email_logs(api_key_id);
 CREATE INDEX IF NOT EXISTS idx_email_logs_domain_id ON email_logs(domain_id);
 CREATE INDEX IF NOT EXISTS idx_email_logs_message_id ON email_logs(message_id);
 CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON email_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_email_events_log ON email_events(email_log_id);
+CREATE INDEX IF NOT EXISTS idx_email_events_type ON email_events(type);
 CREATE INDEX IF NOT EXISTS idx_webhook_events_email_log_id ON webhook_events(email_log_id);
 CREATE INDEX IF NOT EXISTS idx_webhook_events_processed ON webhook_events(processed);
 

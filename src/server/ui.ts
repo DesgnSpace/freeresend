@@ -628,9 +628,14 @@ function zoneFile(domain: string, records: DnsRecord[]): string {
 
 async function getDomainEmailLogs(userId: string, domainId: string) {
   const result = await query(
-    `SELECT el.id, el.from_email, el.to_emails, el.subject, el.status, el.created_at
-     FROM email_logs el JOIN domains d ON el.domain_id = d.id
+    `SELECT el.id, el.from_email, el.to_emails, el.subject, el.status, el.created_at,
+            COUNT(ev.*) FILTER (WHERE ev.type = 'open')  AS open_count,
+            COUNT(ev.*) FILTER (WHERE ev.type = 'click') AS click_count
+     FROM email_logs el
+     JOIN domains d ON el.domain_id = d.id
+     LEFT JOIN email_events ev ON ev.email_log_id = el.id
      WHERE d.user_id = $1 AND el.domain_id = $2
+     GROUP BY el.id
      ORDER BY el.created_at DESC LIMIT 50`,
     [userId, domainId]
   );
@@ -644,12 +649,15 @@ async function getDomainEmailLogs(userId: string, domainId: string) {
     return {
       ...r,
       to_emails: to,
+      open_count: Number(r.open_count ?? 0),
+      click_count: Number(r.click_count ?? 0),
       created_at: new Date(r.created_at).toISOString().replace("T", " ").slice(0, 16),
     };
   });
 }
 
-function domainLogsView(logs: Array<{ id: string; from_email: string; to_emails: string[]; subject: string; status: string; created_at: string }>): string {
+function domainLogsView(logs: Array<{ id: string; from_email: string; to_emails: string[]; subject: string; status: string; created_at: string; open_count?: number; click_count?: number }>): string {
+  const count = (n?: number) => (n && n > 0 ? `<span class="t-name">${n}</span>` : `<span class="t-mut">—</span>`);
   const rows = logs
     .map(
       (r) => `<tr>
@@ -658,12 +666,14 @@ function domainLogsView(logs: Array<{ id: string; from_email: string; to_emails:
         <td class="t-mut">${esc(r.to_emails.join(", "))}</td>
         <td>${esc(r.subject)}</td>
         <td>${statusTag(r.status)}</td>
+        <td class="right">${count(r.open_count)}</td>
+        <td class="right">${count(r.click_count)}</td>
       </tr>`
     )
     .join("");
   return `<table class="logs">
-    <thead><tr><th>when</th><th>from</th><th>to</th><th>subject</th><th>status</th></tr></thead>
-    <tbody>${rows || `<tr><td colspan="5">${emptyState("No emails yet", "Emails sent through this domain appear here.")}</td></tr>`}</tbody>
+    <thead><tr><th>when</th><th>from</th><th>to</th><th>subject</th><th>status</th><th class="right">opens</th><th class="right">clicks</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="7">${emptyState("No emails yet", "Emails sent through this domain appear here.")}</td></tr>`}</tbody>
   </table>`;
 }
 

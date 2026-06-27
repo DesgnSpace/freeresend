@@ -210,6 +210,12 @@ const MAX_TOTAL_ATTACHMENT_BYTES = 10 * 1024 * 1024; // SES raw-message hard lim
 const decodedBase64Bytes = (b64: string) =>
   Math.floor(b64.replace(/\s+/g, "").length * 0.75);
 
+// Extract the bare address from "Name <addr@host>" (or return it unchanged).
+function bareAddress(input: string): string {
+  const m = input.match(/<([^>]+)>/);
+  return (m ? m[1] : input).trim();
+}
+
 const attachmentSchema = z.object({
   filename: z.string().min(1).regex(/^[^\r\n"]+$/, "Invalid attachment filename"),
   content: z
@@ -220,12 +226,20 @@ const attachmentSchema = z.object({
   contentType: z.string().regex(/^[^\r\n]+$/, "Invalid content type").optional(),
 });
 
+// Resend accepts addresses as "addr@host" or "Name <addr@host>", and
+// to/cc/bcc/reply_to as either a single string or an array. Normalize to arrays
+// and validate loosely (display names allowed) for drop-in Resend compatibility.
+const addressField = z
+  .string()
+  .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bareAddress(v)), "Invalid email address");
+const asArray = (v: unknown) => (typeof v === "string" ? [v] : v);
+
 const sendEmailSchema = z
   .object({
-    from: z.string().email("Invalid from email"),
-    to: z.array(z.string().email("Invalid to email")).min(1, "Add at least one recipient."),
-    cc: z.array(z.string().email("Invalid cc email")).optional(),
-    bcc: z.array(z.string().email("Invalid bcc email")).optional(),
+    from: addressField,
+    to: z.preprocess(asArray, z.array(addressField).min(1, "Add at least one recipient.")),
+    cc: z.preprocess(asArray, z.array(addressField).optional()),
+    bcc: z.preprocess(asArray, z.array(addressField).optional()),
     subject: z
       .string()
       .min(1, "Subject is required.")
@@ -233,7 +247,7 @@ const sendEmailSchema = z
     html: z.string().optional(),
     text: z.string().optional(),
     attachments: z.array(attachmentSchema).max(MAX_ATTACHMENTS).optional(),
-    reply_to: z.array(z.string().email("Invalid reply_to email")).optional(),
+    reply_to: z.preprocess(asArray, z.array(addressField).optional()),
     tags: z.record(z.string(), z.string()).optional(),
   })
   .refine((data) => data.html || data.text, {
@@ -259,7 +273,7 @@ export async function sendEmailHandler(req: Req): Promise<Response> {
   if (!domain) return json({ error: "Domain not found" }, 404);
   if (domain.status !== "verified") return json({ error: "Domain isn't verified. Verify DNS and try again." }, 400);
 
-  if (from.split("@")[1] !== domain.domain) {
+  if (bareAddress(from).split("@")[1] !== domain.domain) {
     return json({ error: `From email must use the domain ${domain.domain}.` }, 400);
   }
 

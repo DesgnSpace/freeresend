@@ -12,6 +12,8 @@ interface SESMessage {
     bouncedRecipients: Array<{ emailAddress: string; diagnosticCode: string }>;
   };
   complaint?: { complainedRecipients: Array<{ emailAddress: string }> };
+  open?: { timestamp?: string; ipAddress?: string; userAgent?: string };
+  click?: { timestamp?: string; ipAddress?: string; userAgent?: string; link?: string };
 }
 
 async function processSESEvent(message: SESMessage): Promise<void> {
@@ -26,10 +28,27 @@ async function processSESEvent(message: SESMessage): Promise<void> {
     }
 
     const emailLog = emailResult.rows[0];
+    const eventType = (message.eventType ?? message.notificationType ?? "").toLowerCase();
+
+    // Engagement events fire once PER open/click — record every one in
+    // email_events (counts are derived on read); never overwrite delivery status.
+    if (eventType === "open" || eventType === "click") {
+      const isClick = eventType === "click";
+      const ev = isClick ? message.click : message.open;
+      await query(
+        "INSERT INTO email_events (email_log_id, type, link, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)",
+        [emailLog.id, eventType, isClick ? message.click?.link ?? null : null, ev?.ipAddress ?? null, ev?.userAgent ?? null]
+      );
+      await query(
+        "INSERT INTO webhook_events (email_log_id, event_type, event_data, processed) VALUES ($1, $2, $3, $4)",
+        [emailLog.id, eventType, JSON.stringify(message), true]
+      );
+      return;
+    }
+
+    // Delivery-lifecycle events update the message status.
     let newStatus = emailLog.status;
     let errorMessage: string | null = null;
-
-    const eventType = (message.eventType ?? message.notificationType ?? "").toLowerCase();
     switch (eventType) {
       case "delivery":
         newStatus = "delivered";
