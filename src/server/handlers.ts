@@ -16,13 +16,7 @@ import {
   deleteApiKey,
   updateApiKeyPermissions,
 } from "@/lib/api-keys";
-import { sendEmail, generateDNSRecords, getDomainDkimTokens } from "@/lib/ses";
-import { createSmtpCredentials, deleteSmtpCredentials } from "@/lib/smtp";
-import {
-  setupDomainDNS,
-  verifyDomainOwnership,
-  type DODomainRecord,
-} from "@/lib/digitalocean";
+import { sendEmail } from "@/lib/ses";
 import {
   analyzeEmailDnsRecords,
   normalizeDkimSelector,
@@ -153,106 +147,6 @@ export async function verifyDomain(req: Req): Promise<Response> {
   });
 }
 
-export async function createSmtp(req: Req): Promise<Response> {
-  const user = requireUser(req);
-  const result = await query("SELECT * FROM domains WHERE id = $1 AND user_id = $2", [
-    req.params.id,
-    user.id,
-  ]);
-  if (result.rows.length === 0) return json({ error: "Domain not found" }, 404);
-
-  const domain = result.rows[0];
-  if (domain.status !== "verified") {
-    return json({ error: "Verify the domain before generating SMTP credentials." }, 400);
-  }
-  if (domain.smtp_credentials) {
-    return json(
-      { error: "SMTP credentials already exist for this domain. Delete the old ones to regenerate.", credentials: domain.smtp_credentials },
-      400
-    );
-  }
-
-  const smtpCreds = await createSmtpCredentials(domain.domain);
-  await query("UPDATE domains SET smtp_credentials = $1 WHERE id = $2", [
-    JSON.stringify(smtpCreds),
-    req.params.id,
-  ]);
-  return json({ success: true, credentials: smtpCreds });
-}
-
-export async function removeSmtp(req: Req): Promise<Response> {
-  const user = requireUser(req);
-  const result = await query("SELECT * FROM domains WHERE id = $1 AND user_id = $2", [
-    req.params.id,
-    user.id,
-  ]);
-  if (result.rows.length === 0) return json({ error: "Domain not found" }, 404);
-
-  await deleteSmtpCredentials(result.rows[0].domain);
-  await query("UPDATE domains SET smtp_credentials = NULL WHERE id = $1", [req.params.id]);
-  return json({ success: true, message: "SMTP credentials deleted." });
-}
-
-function toDnsRecord(r: DODomainRecord) {
-  return { type: r.type, name: r.name, value: r.data, ttl: r.ttl };
-}
-
-export async function retryDns(req: Req): Promise<Response> {
-  const user = requireUser(req);
-  const domain = await getDomainById(req.params.id);
-  if (!domain || domain.user_id !== user.id) {
-    return json({ error: "Domain not found" }, 404);
-  }
-
-  const domainName = domain.domain;
-  try {
-    let dkimTokens: string[] = [];
-    try {
-      dkimTokens = await getDomainDkimTokens(domainName);
-    } catch (error) {
-      console.log(`No DKIM tokens found for ${domainName}:`, error);
-    }
-
-    const dnsRecords = generateDNSRecords(
-      domainName,
-      domain.verification_token || "",
-      dkimTokens
-    );
-
-    const isDomainInDO = await verifyDomainOwnership(domainName);
-    if (!isDomainInDO) {
-      return json(
-        {
-          success: false,
-          error: `Domain ${domainName} wasn't found in your DigitalOcean account. Add it there first.`,
-        },
-        400
-      );
-    }
-
-    const doRecords = await setupDomainDNS(domainName, dnsRecords);
-    return json({
-      success: true,
-      data: {
-        domain: domainName,
-        createdRecords: doRecords.map(toDnsRecord),
-        setupInstructions:
-          "DNS records created or updated in DigitalOcean.",
-      },
-      message: `DNS setup completed for ${domainName}. Created ${doRecords.length} records.`,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return json(
-      {
-        success: false,
-        error: `Couldn't set up DigitalOcean DNS: ${message}`,
-        suggestion: "Check your DigitalOcean API token permissions and try again.",
-      },
-      500
-    );
-  }
-}
 
 // ----------------------------------------------------------------------------
 // api keys

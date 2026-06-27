@@ -3,19 +3,58 @@ import { verifyJWT, type AuthUser } from "@/lib/auth";
 import { verifyApiKey } from "@/lib/api-keys";
 import type { ApiKey } from "@/lib/database";
 
-// Shared CORS headers (parity with the previous Next handlers).
-const CORS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+// CORS is configured via CORS_ORIGIN or DOMAIN env. Default is same-origin
+// only (no Access-Control-Allow-Origin header), which blocks cross-origin
+// requests. Set CORS_ORIGIN to a comma-separated list of allowed origins, or
+// set DOMAIN to the app's canonical hostname (e.g. mail.desgn.space) and it
+// will be treated as https://<DOMAIN>. Credentials are allowed when an origin
+// is permitted, which the cookie-based dashboard needs.
+const ALLOWED_METHODS = "GET, POST, PUT, DELETE, OPTIONS";
+const ALLOWED_HEADERS = "Content-Type, Authorization, HX-Request";
 
-export function json(data: unknown, status = 200): Response {
-  return Response.json(data, { status, headers: CORS });
+function normalizeOrigin(domain: string): string {
+  if (/^https?:\/\//.test(domain)) return domain;
+  return `https://${domain}`;
 }
 
-function preflight(): Response {
-  return new Response(null, { status: 200, headers: CORS });
+function allowedOrigin(origin: string | null): string | null {
+  const configured = process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()).filter(Boolean) ?? [];
+  const domainOrigin = process.env.DOMAIN ? normalizeOrigin(process.env.DOMAIN) : null;
+  const allowed = configured.length > 0 ? configured : domainOrigin ? [domainOrigin] : [];
+  if (allowed.includes("*")) return origin; // reflect origin; * is invalid with credentials
+  if (allowed.length === 0) return null; // same-origin only
+  if (!origin) return null;
+  return allowed.includes(origin) ? origin : null;
+}
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowOrigin = allowedOrigin(origin);
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": ALLOWED_METHODS,
+    "Access-Control-Allow-Headers": ALLOWED_HEADERS,
+    "Vary": "Origin",
+  };
+  if (allowOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowOrigin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+  }
+  return headers;
+}
+
+function mergeCors(res: Response, origin: string | null): Response {
+  const headers = new Headers(res.headers);
+  for (const [key, value] of Object.entries(corsHeaders(origin))) {
+    if (value) headers.set(key, value);
+  }
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+export function json(data: unknown, status = 200): Response {
+  return Response.json(data, { status });
+}
+
+function preflight(req: Request): Response {
+  return new Response(null, { status: 204, headers: corsHeaders(req.headers.get("origin")) });
 }
 
 // Thrown by guards to short-circuit a handler with a specific status + body.
@@ -29,19 +68,20 @@ export class HttpError extends Error {
 export type Req = Request & { params: Record<string, string> };
 type Handler = (req: Req) => Promise<Response> | Response;
 
-// Wrap a handler with uniform error handling. ZodError -> 400, HttpError ->
-// its status, anything else -> 500. Keeps every handler down to its logic.
+// Wrap a handler with uniform error handling and CORS. ZodError -> 400,
+// HttpError -> its status, anything else -> 500.
 function wrap(fn: Handler): Handler {
   return async (req) => {
+    const origin = req.headers.get("origin");
     try {
-      return await fn(req);
+      return mergeCors(await fn(req), origin);
     } catch (err) {
-      if (err instanceof HttpError) return json(err.body, err.status);
+      if (err instanceof HttpError) return mergeCors(json(err.body, err.status), origin);
       if (err instanceof ZodError) {
-        return json({ error: "Invalid request data", details: err.issues }, 400);
+        return mergeCors(json({ error: "Invalid request data", details: err.issues }, 400), origin);
       }
       console.error("API error:", err);
-      return json({ error: "Internal server error" }, 500);
+      return mergeCors(json({ error: "Internal server error" }, 500), origin);
     }
   };
 }
@@ -49,7 +89,7 @@ function wrap(fn: Handler): Handler {
 // Build a Bun.serve route value from per-method handlers, adding an OPTIONS
 // preflight automatically so browsers can call the API.
 export function methods(map: Partial<Record<"GET" | "POST" | "PUT" | "DELETE", Handler>>) {
-  const out: Record<string, Handler> = { OPTIONS: () => preflight() };
+  const out: Record<string, Handler> = { OPTIONS: (req) => preflight(req) };
   for (const [method, fn] of Object.entries(map)) {
     if (fn) out[method] = wrap(fn);
   }

@@ -22,9 +22,7 @@
     "dev": "bun --watch server.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-iam": "^3.899.0",
     "@aws-sdk/client-ses": "^3.682.0",
-    "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.0.9",
