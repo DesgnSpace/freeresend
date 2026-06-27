@@ -36,15 +36,24 @@ function html(body: string, init: ResponseInit = {}): Response {
   });
 }
 
-function redirectToLogin(req: Request): Response {
-  if (req.headers.get("HX-Request")) {
-    return new Response("", { status: 401, headers: { "HX-Redirect": "/login" } });
-  }
-  return new Response("", { status: 302, headers: { Location: "/login" } });
+function seeOther(location: string, extraHeaders: Record<string, string> = {}): Response {
+  return new Response("", { status: 303, headers: { Location: location, ...extraHeaders } });
+}
+
+function redirectToLogin(): Response {
+  return seeOther("/login");
 }
 
 function gate(req: Request): AuthUser | Response {
-  return sessionUser(req) ?? redirectToLogin(req);
+  return sessionUser(req) ?? redirectToLogin();
+}
+
+// The single icon in the whole app: copy. Used only on copy buttons.
+const COPY_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+function copyBtn(text: string, label = "Copy"): string {
+  return `<button type="button" class="cbtn" data-copy-text="${esc(text)}" aria-label="${esc(label)}">${COPY_ICON}</button>`;
 }
 
 function formatDate(value: unknown): string {
@@ -54,250 +63,228 @@ function formatDate(value: unknown): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-// --- icons -------------------------------------------------------------------
-
-const ICONS = {
-  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-  zap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><polyline points="20 6 9 17 4 12"/></svg>',
-  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15L19 4"/><path d="M18 5l2 2"/><path d="M15 8l2 2"/></svg>',
-  document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-  empty: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-lg"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
-  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+// Predefined flash messages, keyed so query strings can never inject markup.
+const FLASH: Record<string, { kind: "ok" | "err" | "mut"; text: string }> = {
+  deleted: { kind: "ok", text: "Domain deleted." },
+  verified: { kind: "ok", text: "Domain verified." },
+  pending: { kind: "mut", text: "Still pending — DNS may take time to propagate." },
+  revoked: { kind: "ok", text: "API key revoked." },
+  "domain-required": { kind: "err", text: "Domain is required." },
+  "domain-failed": { kind: "err", text: "Could not add that domain." },
 };
 
-// --- design tokens ----------------------------------------------------------
+function flashFrom(req: Req): string {
+  const code = new URL(req.url).searchParams.get("m");
+  const f = code ? FLASH[code] : undefined;
+  return f ? alert(f.kind, f.text) : "";
+}
+
+// --- styles ------------------------------------------------------------------
 
 const STYLE = `
-:root {
-  color-scheme: light;
-  --bg: #ffffff;
-  --sidebar: #f8f9fb;
-  --surface: #ffffff;
-  --surface-2: #f4f5f7;
-  --surface-3: #ebedf0;
-  --surface-hover: #eef0f4;
-  --fg: #111827;
-  --fg-muted: #4b5563;
-  --fg-subtle: #9ca3af;
-  --border: rgba(0,0,0,0.06);
-  --border-strong: rgba(0,0,0,0.12);
-  --acc: #2563eb;
-  --acc-bg: rgba(37,99,235,0.08);
-  --acc-hover: rgba(37,99,235,0.12);
-  --ok: #16a34a;
-  --ok-bg: rgba(22,163,74,0.08);
-  --warn: #d97706;
-  --warn-bg: rgba(217,119,6,0.08);
-  --err: #dc2626;
-  --err-bg: rgba(220,38,38,0.08);
-  --shadow: 0 1px 3px rgba(0,0,0,0.04);
-  --ring: rgba(37,99,235,0.25);
-}
-.dark {
-  color-scheme: dark;
-  --bg: #050507;
-  --sidebar: #0a0a0f;
-  --surface: #101018;
-  --surface-2: #161622;
-  --surface-3: #1e1e2e;
-  --surface-hover: #1e1e2e;
-  --fg: #f0f1f5;
-  --fg-muted: #9ca3af;
-  --fg-subtle: #6b7280;
-  --border: rgba(255,255,255,0.06);
-  --border-strong: rgba(255,255,255,0.12);
-  --acc: #6ea8fe;
-  --acc-bg: rgba(110,168,254,0.1);
-  --acc-hover: rgba(110,168,254,0.15);
-  --ok: #3fb950;
-  --ok-bg: rgba(63,185,80,0.1);
-  --warn: #d29922;
-  --warn-bg: rgba(210,153,34,0.1);
-  --err: #f85149;
-  --err-bg: rgba(248,81,73,0.1);
-  --shadow: 0 1px 3px rgba(0,0,0,0.2);
-  --ring: rgba(110,168,254,0.25);
+:root{
+  --bg:#f7f6f2;
+  --fg:#171614;
+  --muted:#75736c;
+  --faint:#ecebe4;
+  --faint-2:#e2e1d8;
+  --accent:#27499c;
+  --danger:#9a2820;
+  --danger-bg:rgba(154,40,32,.1);
+  --ok:#1f6b43;
+  --warn:#8a5a00;
 }
 *{box-sizing:border-box;margin:0}
 html,body{height:100%}
-body{background:var(--bg);color:var(--fg);font:14px/1.5 Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
-a{color:var(--acc);text-decoration:none}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font:14px/1.6 ui-monospace,SFMono-Regular,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
-button{font-family:inherit}
-.icon{width:16px;height:16px;flex-shrink:0}
-.icon-lg{width:40px;height:40px;flex-shrink:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-/* ---- layout ---- */
-.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;background:var(--bg)}
+.wrap{max-width:820px;margin:0 auto;padding:48px 24px 96px}
 
-/* ---- sidebar ---- */
-.sidebar{background:var(--sidebar);display:flex;flex-direction:column;padding:0 12px;border-right:1px solid var(--border)}
-.sidebar-header{padding:24px 8px 28px}
-.brand{font-weight:700;font-size:17px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;color:var(--fg)}
-.brand .icon{width:20px;height:20px;color:var(--acc)}
-.brand-tag{display:block;color:var(--fg-subtle);font-size:11px;margin-top:3px;font-weight:400}
-.sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px}
-.nav-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:8px;color:var(--fg-muted);text-decoration:none;font-size:13px;font-weight:500;transition:background .15s,color .15s;cursor:pointer;border:1px solid transparent}
-.nav-item .icon{width:18px;height:18px;color:var(--fg-muted);transition:color .15s}
-.nav-item:hover{background:var(--surface-hover);color:var(--fg)}
-.nav-item:hover .icon{color:var(--fg)}
-.nav-item.active{background:var(--acc-bg);color:var(--acc);border-color:rgba(110,168,254,0.12)}
-.nav-item.active .icon{color:var(--acc)}
-.sidebar-footer{padding:14px 8px;margin-top:auto;border-top:1px solid var(--border)}
-.user-email{display:block;font-size:12px;color:var(--fg-muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.theme-toggle{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--fg-muted);font-size:12px;font-weight:500;cursor:pointer;transition:background .15s,color .15s}
-.theme-toggle:hover{background:var(--surface-hover);color:var(--fg)}
-.theme-toggle .icon{width:14px;height:14px}
-.logout-link{font-size:12px;color:var(--fg-subtle);margin-top:8px;display:inline-block}
-.logout-link:hover{color:var(--err)}
+/* top bar */
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:40px}
+.brand{font-size:16px;font-weight:700;letter-spacing:.02em;color:var(--fg)}
+.brand:hover{text-decoration:none}
+.top-right{display:flex;align-items:baseline;gap:14px;color:var(--muted);font-size:13px}
+.signout{background:none;border:0;padding:0;font:inherit;color:var(--muted);cursor:pointer}
+.signout:hover{color:var(--danger);text-decoration:underline}
 
-/* ---- content ---- */
-.content{background:var(--surface);display:flex;flex-direction:column;min-height:100vh}
-.content-header{padding:32px 32px 0}
-.content-header h1{font-size:24px;font-weight:600;margin:0;letter-spacing:-.03em}
-.content-header p{color:var(--fg-muted);font-size:14px;margin-top:6px}
-.content-body{padding:24px 32px 40px;flex:1;max-width:1100px}
+/* crumbs + headings */
+.crumbs{color:var(--muted);font-size:13px;margin-bottom:18px}
+.crumbs a{color:var(--muted)}
+.crumbs .sep{padding:0 8px;color:var(--faint-2)}
+h1{font-size:20px;font-weight:700;letter-spacing:-.01em;margin:0 0 6px}
+.lede{color:var(--muted);margin-bottom:28px}
 
-/* ---- auth ---- */
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--sidebar);padding:20px}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:100%;max-width:380px;box-shadow:var(--shadow)}
-.login-card h1{font-size:20px;margin:0 0 6px}
-.login-card .subtitle{color:var(--fg-muted);font-size:14px;margin-bottom:24px}
+/* tabs */
+.tabs{display:flex;gap:20px;margin:22px 0 28px}
+.tab{color:var(--muted);font-size:13px}
+.tab.active{color:var(--fg);font-weight:700;text-decoration:underline;text-underline-offset:4px}
 
-/* ---- forms ---- */
-label{display:block;margin:0 0 16px;color:var(--fg-muted);font-size:13px;font-weight:500}
-input,select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border-strong);border-radius:8px;color:var(--fg);font:inherit;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
-input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--ring);background:var(--surface)}
-input::placeholder{color:var(--fg-subtle)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;background:var(--acc);color:#fff;border:0;border-radius:8px;font:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:opacity .15s,transform .05s,background .15s;box-shadow:var(--shadow)}
-.btn:active{transform:translateY(1px)}
-.btn:hover{opacity:.9}
-.btn .icon{width:14px;height:14px}
-.btn-danger{background:var(--err-bg);color:var(--err)}
-.btn-danger:hover{background:var(--err-bg);opacity:1;filter:brightness(.95)}
-.btn-ghost{background:transparent;color:var(--fg-muted);border:1px solid var(--border);box-shadow:none}
-.btn-ghost:hover{color:var(--fg);background:var(--surface-hover)}
-.btn-secondary{background:var(--surface-2);color:var(--fg);border:1px solid var(--border);box-shadow:none}
-.btn-secondary:hover{background:var(--surface-hover)}
+/* forms */
+label{display:block;color:var(--muted);font-size:13px;margin-bottom:16px}
+label span{display:block;margin-bottom:6px}
+input{
+  width:100%;font:inherit;color:var(--fg);background:var(--faint);
+  border:0;border-radius:6px;padding:10px 12px;
+}
+input::placeholder{color:var(--muted)}
+input:focus{outline:2px solid var(--accent);outline-offset:0;background:var(--faint-2)}
+
+/* buttons */
+button,.btn{font:inherit;cursor:pointer}
+.btn{
+  display:inline-block;background:var(--accent);color:#fff;border:0;
+  border-radius:6px;padding:9px 16px;min-height:38px;
+}
+.btn:hover{text-decoration:none;filter:brightness(1.08)}
+.btn-quiet{background:var(--faint);color:var(--fg)}
+.btn-quiet:hover{background:var(--faint-2);filter:none}
+.btn-sm{padding:6px 12px;min-height:32px;font-size:13px}
+/* destructive: red carried in the button, deepening to solid red on hover */
+.btn-danger{background:var(--danger-bg);color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff;filter:none}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-sm{padding:6px 10px;font-size:12px}
+.act{background:none;border:0;color:var(--accent);padding:5px 8px;font:inherit;font-size:12px;border-radius:4px}
+.act:hover{text-decoration:underline}
+.act.danger{color:var(--danger);font-weight:600}
+.act.danger:hover{background:var(--danger-bg);text-decoration:none}
+.inline-form{display:inline}
 
-/* ---- toolbar ---- */
-.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:24px}
-.toolbar input,.toolbar select{flex:1;min-width:220px;max-width:320px;margin-top:0}
+/* toolbar */
+.toolbar{display:flex;gap:10px;align-items:flex-start;margin-bottom:28px}
+.toolbar input{flex:1}
 .toolbar .btn{white-space:nowrap}
 
-/* ---- table ---- */
-.table-wrap{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+/* tables — no borders, spacing + hover only */
 table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:14px 18px;font-size:13px}
-th{color:var(--fg-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;background:transparent;border-bottom:1px solid var(--border)}
-td{border-top:1px solid var(--border);color:var(--fg)}
-tr:hover td{background:var(--surface-hover)}
-td:last-child{white-space:nowrap;text-align:right}
-.cell-muted{color:var(--fg-muted)}
-.cell-subtle{color:var(--fg-subtle);font-size:12px}
+th{
+  text-align:left;color:var(--muted);font-size:12px;font-weight:600;
+  letter-spacing:.04em;padding:0 12px 10px;
+}
+td{padding:11px 12px;vertical-align:top}
+tr:hover td{background:var(--faint)}
+th.right,td.right{text-align:right;white-space:nowrap}
+.t-name{font-weight:600;color:var(--fg)}
+.t-name:hover{color:var(--accent)}
+.t-sub{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.t-mut{color:var(--muted)}
+.logs td{font-size:12.5px}
 
-/* ---- badge ---- */
-.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:999px;background:var(--surface-3);font-weight:600;border:1px solid var(--border)}
-.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
-.badge.verified{color:var(--ok);background:var(--ok-bg);border-color:transparent}
-.badge.pending{color:var(--warn);background:var(--warn-bg);border-color:transparent}
-.badge.failed,.badge.bounced{color:var(--err);background:var(--err-bg);border-color:transparent}
-.badge.info{color:var(--acc);background:var(--acc-bg);border-color:transparent}
+/* status — color + word (never color alone) */
+.st-verified{color:var(--ok)}
+.st-pending{color:var(--warn)}
+.st-failed,.st-bounced,.st-delivered{color:var(--fg)}
+.st-failed,.st-bounced{color:var(--danger)}
+.st-delivered{color:var(--ok)}
 
-/* ---- domain list ---- */
-.domain-row td:first-child{padding-left:20px}
-.domain-row td:last-child{padding-right:20px}
-.domain-link{color:var(--fg);font-weight:600;font-size:14px;display:block}
-.domain-link:hover{color:var(--acc);text-decoration:none}
-.domain-meta{display:block;color:var(--fg-subtle);font-size:12px;margin-top:2px}
+/* alerts */
+.alert{padding:10px 14px;border-radius:6px;margin-bottom:20px;font-size:13px}
+.alert.ok{color:var(--ok);background:var(--faint)}
+.alert.err{color:var(--danger);background:var(--faint)}
+.alert.mut{color:var(--muted);background:var(--faint)}
 
-/* ---- domain detail ---- */
-.domain-header{display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-.domain-header h1{font-size:24px}
-.domain-actions{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+/* dns + key blocks */
+.block{background:var(--faint);border-radius:8px;padding:18px;margin-bottom:24px}
+.block-title{font-weight:700;font-size:13px;margin-bottom:14px}
+.block table td,.block table th{padding:7px 10px}
+.block code{word-break:break-all;color:var(--fg)}
+.dl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.dl-row .note{color:var(--muted);font-size:12px}
+.keyout{display:flex;gap:12px;align-items:center;margin-top:12px}
+.keyout code{flex:1;background:var(--bg);border-radius:6px;padding:10px 12px;word-break:break-all}
 
-/* ---- sub tabs ---- */
-.sub-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border)}
-.sub-tab{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px 8px 0 0;color:var(--fg-muted);font-size:13px;font-weight:500;text-decoration:none;background:transparent;transition:color .15s,background .15s;cursor:pointer;border:0;border-bottom:2px solid transparent;margin-bottom:-1px}
-.sub-tab .icon{width:14px;height:14px}
-.sub-tab:hover{color:var(--fg);background:var(--surface-hover)}
-.sub-tab.active{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg)}
-.domain-panel{flex:1}
+/* empty */
+.empty{color:var(--muted);padding:40px 4px;text-align:center}
+.empty .empty-t{color:var(--fg);font-weight:700;margin-bottom:4px}
 
-/* ---- banner / alert ---- */
-.banner{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
-.banner-title{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:600;font-size:13px;color:var(--fg)}
-.banner-title .icon{width:16px;height:16px;color:var(--warn)}
-.banner .table-wrap{margin-top:12px;background:var(--surface);border-color:var(--border-strong)}
-.banner code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;word-break:break-all;color:var(--acc)}
-.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;margin-bottom:16px;font-size:13px;border:1px solid var(--border)}
-.alert .icon{width:16px;height:16px;flex-shrink:0;margin-top:1px}
-.alert.ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}
-.alert.err{color:var(--err);background:var(--err-bg);border-color:transparent}
-.alert.mut{color:var(--fg-muted);background:var(--surface-2)}
+/* login */
+.login{min-height:64vh;display:flex;flex-direction:column;justify-content:center;max-width:340px;margin:0 auto}
+.login h1{margin-bottom:4px}
+.login .lede{margin-bottom:26px}
 
-/* ---- empty state ---- */
-.empty{text-align:center;padding:56px 24px;color:var(--fg-muted)}
-.empty .icon-lg{color:var(--fg-subtle);margin-bottom:14px}
-.empty-title{font-size:15px;font-weight:600;color:var(--fg);margin-bottom:4px}
-.empty-desc{font-size:13px}
+/* status dot (domain verification) */
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);vertical-align:baseline;cursor:help}
+.dot-ok{background:var(--ok)}
+.dot-pending{background:var(--warn)}
+.dot-failed{background:var(--danger)}
+h1 .dot{margin-left:8px}
 
-/* ---- code / key ---- */
-.code-block{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--border);word-break:break-all;color:var(--acc);display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
-.code-block button{flex-shrink:0;background:transparent;color:var(--fg-muted);padding:4px;border:0;border-radius:4px;cursor:pointer}
-.code-block button:hover{color:var(--fg);background:var(--surface-hover)}
-pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;white-space:pre-wrap;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto}
+/* copy button (the one icon in the app) */
+.cbtn{display:inline-grid;place-items:center;width:26px;height:26px;padding:0;margin-right:8px;vertical-align:middle;background:none;border:0;border-radius:4px;color:var(--muted);cursor:pointer}
+.cbtn svg{width:14px;height:14px}
+.cbtn:hover{color:var(--fg);background:var(--faint-2)}
+.cbtn.copied{color:var(--ok);animation:copied-pop .9s ease}
+@keyframes copied-pop{0%{transform:scale(1)}30%{transform:scale(1.3)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.cbtn.copied{animation:none}}
 
-/* ---- misc ---- */
-.err{color:var(--err)}.ok{color:var(--ok)}.mut{color:var(--fg-muted)}
-.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.section-title h2{font-size:14px;font-weight:600;margin:0}
+/* confirm popover (anchored beside the clicked element) */
+.cpop{position:fixed;inset:auto;margin:0;z-index:50;max-width:260px;padding:14px;
+  background:var(--bg);color:var(--fg);border:0;border-radius:8px;font:inherit;
+  box-shadow:0 8px 30px rgba(20,19,16,.2);
+  transition:opacity .12s ease,transform .12s ease;transition-behavior:allow-discrete}
+@starting-style{.cpop:popover-open{opacity:0;transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.cpop{transition:none}}
+.cpop-q{margin-bottom:12px;line-height:1.5;font-size:13px}
+.cpop-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.btn-xs{padding:5px 12px;min-height:30px}
+.btn-text{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;padding:5px 8px}
+.btn-text:hover{color:var(--fg)}
+
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-
-/* ---- htmx loading states ---- */
-.htmx-request{opacity:.6;pointer-events:none}
+@media (max-width:560px){.wrap{padding:32px 16px 64px}.btn,.signout{min-height:44px}}
 `;
 
-// All dashboard JS lives in this one inline block (theme toggle + copy button),
-// wired via event delegation so there are no inline on* handlers. CSP allows it
-// by its sha256 hash (APP_SCRIPT_HASH) — no 'unsafe-inline', no vendored files.
+// One inline script, two jobs:
+//  1. hx-confirm -> a small popover anchored beside the clicked element (not a
+//     centered modal). Uses the Popover API (top layer, light-dismiss = cancel),
+//     falling back to window.confirm where unsupported.
+//  2. [data-copy-text] -> copy the literal value with a quick pulse animation.
+// Event-delegated on document so it survives hx-boost body swaps; the popover is
+// looked up fresh each time. CSP allows exactly this block by its sha256 hash.
 const APP_SCRIPT = `(function(){
-  const root=document.documentElement;
-  const saved=localStorage.getItem('waka-theme');
-  const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if(saved==='dark'||(!saved&&prefersDark))root.classList.add('dark');
-  function updateBtn(){
-    const btn=document.getElementById('theme-toggle');
-    if(!btn)return;
-    const isDark=root.classList.contains('dark');
-    btn.innerHTML=isDark?${JSON.stringify(`${ICONS.moon} Light`)}:${JSON.stringify(`${ICONS.sun} Dark`)};
-    btn.setAttribute('aria-label',isDark?'Switch to light mode':'Switch to dark mode');
-  }
+  var pending=null;
+  function pop(){return document.getElementById('cpop');}
+  document.addEventListener('htmx:confirm',function(e){
+    if(!e.detail.question)return;
+    e.preventDefault();
+    var p=pop();
+    if(!p||!p.showPopover){if(window.confirm(e.detail.question))e.detail.issueRequest(true);return;}
+    pending=e.detail;
+    var q=document.getElementById('cpop-q');if(q)q.textContent=e.detail.question;
+    var r=e.detail.elt.getBoundingClientRect();
+    p.style.top=(r.bottom+6)+'px';
+    p.style.left=r.left+'px';
+    p.showPopover();
+    var pr=p.getBoundingClientRect();
+    if(pr.right>window.innerWidth-8)p.style.left=Math.max(8,window.innerWidth-8-pr.width)+'px';
+    if(pr.bottom>window.innerHeight-8)p.style.top=Math.max(8,r.top-pr.height-6)+'px';
+  });
+  document.addEventListener('toggle',function(e){
+    if(e.target&&e.target.id==='cpop'&&e.newState==='closed')pending=null;
+  },true);
   document.addEventListener('click',function(e){
-    if(e.target.closest('#theme-toggle')){
-      root.classList.toggle('dark');
-      localStorage.setItem('waka-theme',root.classList.contains('dark')?'dark':'light');
-      updateBtn();
+    var b=e.target.closest&&e.target.closest('[data-cpop]');
+    if(b){
+      var yes=b.getAttribute('data-cpop')==='yes';
+      var d=pending;pending=null;
+      var p=pop();if(p&&p.hidePopover)p.hidePopover();
+      if(yes&&d)d.issueRequest(true);
       return;
     }
-    const c=e.target.closest('[data-copy]');
-    if(c){
-      const code=c.parentElement&&c.parentElement.querySelector('code');
-      if(!code)return;
-      navigator.clipboard.writeText(code.innerText).then(function(){
-        const o=c.innerHTML; c.textContent='Copied'; setTimeout(function(){c.innerHTML=o;},1500);
-      });
-    }
+    var c=e.target.closest&&e.target.closest('[data-copy-text]');
+    if(!c)return;
+    if(navigator.clipboard)navigator.clipboard.writeText(c.getAttribute('data-copy-text'));
+    c.classList.remove('copied');void c.offsetWidth;c.classList.add('copied');
+    setTimeout(function(){c.classList.remove('copied');},900);
   });
-  document.addEventListener('DOMContentLoaded',updateBtn);
 })();`;
 
 const APP_SCRIPT_HASH =
@@ -320,71 +307,72 @@ const CSP = [
   "object-src 'none'",
 ].join("; ");
 
-// --- sidebar nav -------------------------------------------------------------
-
-const NAV_ITEMS = [
-  { id: "domains", label: "Domains", path: "/ui/domains" },
-] as const;
-
-function navItems(active: string): string {
-  return NAV_ITEMS.map(
-    (item) =>
-      `<a class="nav-item${item.id === active ? " active" : ""}" href="${item.path}" hx-get="${item.path}" hx-target="#content-area">${ICONS.globe}<span>${item.label}</span></a>`
-  ).join("");
-}
-
 // --- layout ------------------------------------------------------------------
 
+function topBar(user?: AuthUser | null): string {
+  if (!user) return "";
+  return `<div class="top">
+    <a class="brand" href="/dashboard">waka</a>
+    <div class="top-right">
+      <span>${esc(user.email)}</span>
+      <form class="inline-form" method="post" action="/logout" hx-confirm="Sign out?">
+        <button type="submit" class="signout">sign out</button>
+      </form>
+    </div>
+  </div>`;
+}
+
 function layout(title: string, body: string, user?: AuthUser | null): string {
-  const inner = user
-    ? `<div class="app">
-        <aside class="sidebar">
-          <div class="sidebar-header">
-            <div class="brand">${ICONS.zap}waka</div>
-            <div class="brand-tag">self-hosted email API</div>
-          </div>
-          <nav id="sidebar-nav" class="sidebar-nav">${navItems("domains")}</nav>
-          <div class="sidebar-footer">
-            <span class="user-email">${esc(user.email)}</span>
-            <button id="theme-toggle" type="button" class="theme-toggle">${ICONS.sun} Theme</button>
-            <a href="/logout" class="logout-link">Sign out</a>
-          </div>
-        </aside>
-        <main id="content-area" class="content">${body}</main>
-      </div>`
-    : `<div class="login-wrap">${body}</div>`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} · waka</title>
 <script src="${HTMX_SRC}" integrity="${HTMX_SRI}" crossorigin="anonymous"></script>
 <style>${STYLE}</style>
 <script>${APP_SCRIPT}</script>
-</head><body>${inner}</body></html>`;
+</head><body hx-boost="true"><div class="wrap">${topBar(user)}${body}</div>
+<div id="cpop" popover class="cpop" aria-labelledby="cpop-q">
+  <p id="cpop-q" class="cpop-q"></p>
+  <div class="cpop-actions">
+    <button type="button" class="btn-text" data-cpop="no">cancel</button>
+    <button type="button" class="btn btn-xs" data-cpop="yes" autofocus>confirm</button>
+  </div>
+</div></body></html>`;
 }
 
-function contentFragment(section: string, title: string, body: string, subtitle?: string): string {
-  return `<div id="content-area" class="content">
-    <header class="content-header"><h1>${title}</h1>${subtitle ? `<p>${esc(subtitle)}</p>` : ""}</header>
-    <div class="content-body">${body}</div>
-  </div>
-  <nav id="sidebar-nav" class="sidebar-nav" hx-swap-oob="true">${navItems(section)}</nav>`;
+function alert(kind: "ok" | "err" | "mut", message: string): string {
+  return `<div class="alert ${kind}">${esc(message)}</div>`;
+}
+
+function emptyState(title: string, desc: string): string {
+  return `<div class="empty"><div class="empty-t">${esc(title)}</div><div>${esc(desc)}</div></div>`;
+}
+
+function crumbs(parts: Array<{ label: string; href?: string }>): string {
+  return `<div class="crumbs">${parts
+    .map((p, i) =>
+      `${i ? '<span class="sep">/</span>' : ""}${p.href ? `<a href="${p.href}">${esc(p.label)}</a>` : esc(p.label)}`
+    )
+    .join("")}</div>`;
 }
 
 // --- auth pages --------------------------------------------------------------
 
 export function loginPage(req: Req): Response {
-  if (sessionUser(req)) return new Response("", { status: 302, headers: { Location: "/dashboard" } });
-  return html(
-    layout("Sign in",
-      `<div class="login-card"><h1>Sign in to waka</h1><p class="subtitle">Self-hosted transactional email API</p>
-      <form hx-post="/login" hx-target="#msg" hx-swap="innerHTML">
-        <label>Email<input name="email" type="email" required autofocus placeholder="you@example.com"></label>
-        <label>Password<input name="password" type="password" required placeholder="••••••••"></label>
-        <button type="submit" class="btn" style="width:100%">${ICONS.zap}Sign in</button>
-        <div id="msg" style="margin-top:12px"></div>
-      </form></div>`
-    )
-  );
+  if (sessionUser(req)) return seeOther("/dashboard");
+  return html(layout("Sign in", loginView()));
+}
+
+function loginView(error = ""): string {
+  return `<div class="login">
+    <h1>waka</h1>
+    <p class="lede">self-hosted transactional email</p>
+    ${error ? alert("err", error) : ""}
+    <form method="post" action="/login">
+      <label><span>email</span><input name="email" type="email" required autofocus autocomplete="email" placeholder="you@example.com"></label>
+      <label><span>password</span><input name="password" type="password" required autocomplete="current-password" placeholder="••••••••"></label>
+      <button type="submit" class="btn" style="width:100%">sign in</button>
+    </form>
+  </div>`;
 }
 
 export async function doLogin(req: Req): Promise<Response> {
@@ -393,112 +381,93 @@ export async function doLogin(req: Req): Promise<Response> {
     String(form.get("email") ?? ""),
     String(form.get("password") ?? "")
   );
-  if (!user) return html(`<p class="err">Invalid email or password.</p>`);
-  return html(`<p class="ok">Signed in…</p>`, {
-    headers: { "Set-Cookie": sessionCookie(generateJWT(user)), "HX-Redirect": "/dashboard" },
-  });
+  if (!user) return html(layout("Sign in", loginView("Invalid email or password.")));
+  return seeOther("/dashboard", { "Set-Cookie": sessionCookie(generateJWT(user)) });
 }
 
 export function logout(): Response {
-  return new Response("", {
-    status: 302,
-    headers: { Location: "/login", "Set-Cookie": clearSessionCookie() },
-  });
+  return seeOther("/login", { "Set-Cookie": clearSessionCookie() });
 }
 
 export function home(req: Req): Response {
-  return new Response("", {
-    status: 302,
-    headers: { Location: sessionUser(req) ? "/dashboard" : "/login" },
-  });
+  return seeOther(sessionUser(req) ? "/dashboard" : "/login");
 }
 
-// --- dashboard ---------------------------------------------------------------
+// --- domains list ------------------------------------------------------------
+
+interface DnsRecord { type: string; name: string; value: string; ttl?: number; description?: string }
+interface DomainRow { id: string; domain: string; status: string; created_at?: string }
+
+// Email-log status: keep the word (delivered / bounced / sent …), color-coded.
+function statusTag(status: string): string {
+  return `<span class="st-${esc(status)}">${esc(status)}</span>`;
+}
+
+// Domain verification: a dot. Hover/SR reads "verified" or "not verified".
+function verifyDot(status: string): string {
+  const ok = status === "verified";
+  const label = ok ? "verified" : "not verified";
+  const cls = ok ? "dot-ok" : status === "failed" ? "dot-failed" : "dot-pending";
+  return `<span class="dot ${cls}" role="img" aria-label="${label}" title="${label}"></span>`;
+}
+
+function domainsView(domains: DomainRow[], flash = ""): string {
+  const rows = domains
+    .map(
+      (d) => `<tr>
+        <td>
+          <a class="t-name" href="/ui/domains/${esc(d.id)}">${esc(d.domain)}</a>
+          <span class="t-sub">added ${formatDate(d.created_at)}</span>
+        </td>
+        <td>${verifyDot(d.status)}</td>
+        <td class="right">
+          ${d.status !== "verified" ? actionForm(`/ui/domains/${esc(d.id)}/verify`, "verify", "act", `Check DNS for ${d.domain}?`) : ""}
+          ${actionForm(`/ui/domains/${esc(d.id)}/delete`, "delete", "act danger", `Delete ${d.domain}? This removes its API keys too.`)}
+        </td>
+      </tr>`
+    )
+    .join("");
+  return `<h1>domains</h1>
+  <p class="lede">sending domains and their DNS records</p>
+  ${flash}
+  <form class="toolbar" method="post" action="/ui/domains" hx-confirm="Add this domain?">
+    <input name="domain" placeholder="mail.example.com" required>
+    <button type="submit" class="btn">add domain</button>
+  </form>
+  <table>
+    <thead><tr><th>domain</th><th>status</th><th class="right">actions</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="3">${emptyState("No domains yet", "Add your first domain to start sending email.")}</td></tr>`}</tbody>
+  </table>`;
+}
+
+function actionForm(action: string, label: string, cls: string, confirm: string): string {
+  return `<form class="inline-form" method="post" action="${action}" hx-confirm="${esc(confirm)}"><button type="submit" class="${cls}">${esc(label)}</button></form>`;
+}
 
 export async function dashboard(req: Req): Promise<Response> {
   const user = gate(req);
   if (user instanceof Response) return user;
   const domains = await getUserDomains(user.id);
-  return html(layout("Domains", contentFragment("domains", "Domains", domainsView(domains), "Manage sending domains and their DNS records."), user));
+  return html(layout("domains", domainsView(domains as DomainRow[], flashFrom(req)), user));
 }
 
-// --- domains -----------------------------------------------------------------
-
-interface DnsRecord { type: string; name: string; value: string }
-interface DomainRow { id: string; domain: string; status: string; created_at?: string }
-
-function emptyState(icon: string, title: string, desc: string): string {
-  return `<div class="empty">${icon}<div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
-}
-
-function domainsView(domains: DomainRow[], banner = ""): string {
-  const rows = domains
-    .map(
-      (d) => `<tr class="domain-row"><td>
-        <a class="domain-link" href="/ui/domains/${esc(d.id)}" hx-get="/ui/domains/${esc(d.id)}" hx-target="#content-area">${esc(d.domain)}</a>
-        <span class="domain-meta">Added ${formatDate(d.created_at)}</span>
-      </td>
-      <td><span class="badge ${esc(d.status)}">${statusDot(d.status)}${esc(d.status)}</span></td>
-      <td>
-        <div style="display:flex;gap:6px;justify-content:flex-end">
-          ${d.status !== "verified" ? `<button class="btn btn-ghost btn-sm" hx-post="/ui/domains/${esc(d.id)}/verify" hx-target="#content-area">${ICONS.check}Verify</button>` : ""}
-          <button class="btn btn-ghost btn-sm" hx-post="/ui/domains/${esc(d.id)}/delete" hx-target="#content-area" hx-confirm="Delete ${esc(d.domain)}?">${ICONS.trash}Delete</button>
-        </div>
-      </td></tr>`
-    )
-    .join("");
-  return `${banner}
-  <div class="toolbar">
-    <input name="domain" form="add-domain" placeholder="mail.example.com" required>
-    <form id="add-domain" hx-post="/ui/domains" hx-target="#content-area" class="row" style="display:none"></form>
-    <button form="add-domain" type="submit" class="btn">${ICONS.globe}Add domain</button>
-  </div>
-  <div class="table-wrap">
-    <table><thead><tr><th>Domain</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>
-    ${rows || `<tr><td colspan="3">${emptyState(ICONS.empty, "No domains yet", "Add your first domain to start sending email.")}</td></tr>`}</tbody></table>
-  </div>`;
-}
-
-function statusDot(status: string): string {
-  const color = status === "verified" ? "var(--ok)" : status === "pending" ? "var(--warn)" : "var(--err)";
-  return `<span class="dot" style="background:${color}"></span>`;
-}
-
-function dnsBanner(records: DnsRecord[]): string {
-  if (!records?.length) return "";
-  const rows = records
-    .map((r) => `<tr><td><code>${esc(r.type)}</code></td><td><code>${esc(r.name)}</code></td><td><code>${esc(r.value)}</code></td></tr>`)
-    .join("");
-  return `<div class="banner">
-    <div class="banner-title">${ICONS.alert}DNS records required</div>
-    <div class="table-wrap"><table><thead><tr><th>Type</th><th>Name</th><th>Value</th></tr></thead><tbody>${rows}</tbody></table></div>
-  </div>`;
-}
-
-export async function uiDomains(req: Req): Promise<Response> {
-  const user = gate(req);
-  if (user instanceof Response) return user;
-  const domains = await getUserDomains(user.id);
-  return html(contentFragment("domains", "Domains", domainsView(domains), "Manage sending domains and their DNS records."));
+// /ui/domains GET is an alias kept for old links; list lives at /dashboard.
+export function uiDomains(): Response {
+  return seeOther("/dashboard");
 }
 
 export async function uiAddDomain(req: Req): Promise<Response> {
   const user = gate(req);
   if (user instanceof Response) return user;
   const domain = String((await req.formData()).get("domain") ?? "").trim();
-  if (!domain) return html(contentFragment("domains", "Domains", domainsView(await getUserDomains(user.id), alert("err", "Domain is required."))));
+  if (!domain) return seeOther("/dashboard?m=domain-required");
   try {
-    const result = (await addDomain(user.id, domain)) as { dnsRecords?: DnsRecord[] };
-    return html(contentFragment("domains", "Domains", domainsView(await getUserDomains(user.id), dnsBanner(result.dnsRecords ?? []))));
+    const result = (await addDomain(user.id, domain)) as { domain: { id: string } };
+    return seeOther(`/ui/domains/${result.domain.id}`);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to add domain.";
-    return html(contentFragment("domains", "Domains", domainsView(await getUserDomains(user.id), alert("err", msg))));
+    console.error("add domain failed:", err);
+    return seeOther("/dashboard?m=domain-failed");
   }
-}
-
-function alert(kind: "ok" | "err" | "mut", message: string): string {
-  const icon = kind === "ok" ? ICONS.check : ICONS.alert;
-  return `<div class="alert ${kind}">${icon}<span>${esc(message)}</span></div>`;
 }
 
 export async function uiDeleteDomain(req: Req): Promise<Response> {
@@ -509,58 +478,119 @@ export async function uiDeleteDomain(req: Req): Promise<Response> {
   } catch (err) {
     console.error("delete domain failed:", err);
   }
-  return new Response("", { status: 204, headers: { "HX-Redirect": "/dashboard" } });
+  return seeOther("/dashboard?m=deleted");
+}
+
+export async function uiVerifyDomain(req: Req): Promise<Response> {
+  const user = gate(req);
+  if (user instanceof Response) return user;
+  const domain = await getDomainById(req.params.id);
+  if (!domain || domain.user_id !== user.id) return seeOther("/dashboard");
+  const status = await checkDomainVerification(req.params.id);
+  return seeOther(`/ui/domains/${domain.id}?m=${status === "verified" ? "verified" : "pending"}`);
 }
 
 // --- domain detail -----------------------------------------------------------
 
-function domainDetailShell(domain: DomainRow, activeTab: string, body: string): string {
-  return `
-    <div class="domain-header">
-      <h1>${esc(domain.domain)}</h1>
-      <span class="badge ${esc(domain.status)}">${statusDot(domain.status)}${esc(domain.status)}</span>
-    </div>
-    <nav class="sub-tabs">
-      <a class="sub-tab${activeTab === "overview" ? " active" : ""}" href="/ui/domains/${esc(domain.id)}" hx-get="/ui/domains/${esc(domain.id)}" hx-target="#content-area">${ICONS.globe}Overview</a>
-      <a class="sub-tab${activeTab === "logs" ? " active" : ""}" href="/ui/domains/${esc(domain.id)}/logs" hx-get="/ui/domains/${esc(domain.id)}/logs" hx-target="#content-area">${ICONS.document}Logs</a>
-      <a class="sub-tab${activeTab === "keys" ? " active" : ""}" href="/ui/domains/${esc(domain.id)}/keys" hx-get="/ui/domains/${esc(domain.id)}/keys" hx-target="#content-area">${ICONS.key}API Keys</a>
-    </nav>
-    <section id="domain-panel" class="domain-panel">${body}</section>
-  `;
+function detailTabs(domain: DomainRow, active: string): string {
+  const tab = (id: string, label: string, href: string) =>
+    `<a class="tab${id === active ? " active" : ""}" href="${href}">${label}</a>`;
+  const base = `/ui/domains/${esc(domain.id)}`;
+  return `<nav class="tabs">
+    ${tab("overview", "overview", base)}
+    ${tab("logs", "logs", `${base}/logs`)}
+    ${tab("keys", "api keys", `${base}/keys`)}
+  </nav>`;
 }
 
-function domainOverview(domain: DomainRow & Partial<{ dns_records?: DnsRecord[] }>, banner = ""): string {
-  const dns: DnsRecord[] = Array.isArray(domain.dns_records) ? domain.dns_records : [];
-  return `${banner}${dnsBanner(dns)}
-    <div class="domain-actions">
-      ${domain.status !== "verified" ? `<button class="btn btn-secondary" hx-post="/ui/domains/${esc(domain.id)}/verify" hx-target="#content-area">${ICONS.check}Check DNS</button>` : ""}
-      <button class="btn btn-danger" hx-post="/ui/domains/${esc(domain.id)}/delete" hx-target="#content-area" hx-confirm="Delete ${esc(domain.domain)}?">${ICONS.trash}Delete domain</button>
-    </div>
-    ${domain.status === "verified" ? alert("ok", "Domain is verified and ready to send.") : alert("mut", "Add the DNS records above, then click Check DNS to verify.")}`;
+function detailHead(domain: DomainRow, active: string): string {
+  return `${crumbs([{ label: "domains", href: "/dashboard" }, { label: domain.domain }])}
+    <h1>${esc(domain.domain)} ${verifyDot(domain.status)}</h1>
+    ${detailTabs(domain, active)}`;
 }
 
-function domainKeysView(domain: DomainRow, keys: Array<{ id: string; key_name: string; key_prefix: string; permissions: string[]; created_at?: string }>, banner = ""): string {
-  const rows = keys
+function dnsTable(records: DnsRecord[]): string {
+  const rows = records
     .map(
-      (k) => `<tr><td><span style="font-weight:600;color:var(--fg)">${esc(k.key_name)}</span></td>
-      <td><code>${esc(k.key_prefix)}…</code></td>
-      <td><span class="cell-muted">${esc((k.permissions ?? []).join(", "))}</span></td>
-      <td><span class="cell-subtle">${formatDate(k.created_at)}</span></td>
-      <td><button class="btn btn-ghost btn-sm" hx-post="/ui/domains/${esc(domain.id)}/keys/${esc(k.id)}/delete" hx-target="#content-area" hx-confirm="Revoke ${esc(k.key_name)}?">${ICONS.trash}Revoke</button></td></tr>`
+      (r) => `<tr><td><code>${esc(r.type)}</code></td><td>${copyBtn(r.name, "Copy name")}<code>${esc(r.name)}</code></td><td>${copyBtn(r.value, "Copy value")}<code>${esc(r.value)}</code></td></tr>`
     )
     .join("");
-  const form = domain.status === "verified"
-    ? `<form hx-post="/ui/domains/${esc(domain.id)}/keys" hx-target="#content-area" class="toolbar">
-        <input name="keyName" placeholder="Key name" required>
-        <button type="submit" class="btn">${ICONS.key}Create key</button>
-      </form>`
-    : alert("mut", "Verify the domain before creating API keys.");
-  return `${banner}${form}
-  <div class="table-wrap">
-    <table><thead><tr><th>Name</th><th>Prefix</th><th>Permissions</th><th>Created</th><th style="text-align:right">Actions</th></tr></thead><tbody>
-    ${rows || `<tr><td colspan="5">${emptyState(ICONS.key, "No API keys yet", "Create a key to send email from this domain.")}</td></tr>`}</tbody></table>
-  </div>`;
+  return `<table><thead><tr><th>type</th><th>name</th><th>value</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
+
+function domainOverview(domain: DomainRow & { dns_records?: DnsRecord[] }, flash = ""): string {
+  const dns: DnsRecord[] = Array.isArray(domain.dns_records) ? domain.dns_records : [];
+  const dnsBlock = dns.length
+    ? `<div class="block">
+        <div class="block-title">DNS records</div>
+        ${dnsTable(dns)}
+        <div class="dl-row">
+          <span class="note">Add these at your DNS provider, then verify.</span>
+          <a class="btn btn-quiet btn-sm" href="/ui/domains/${esc(domain.id)}/dns.zone" download="${esc(domain.domain)}.txt" hx-boost="false">export to cloudflare</a>
+        </div>
+      </div>`
+    : "";
+  return `${flash}${dnsBlock}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      ${domain.status !== "verified" ? actionForm(`/ui/domains/${esc(domain.id)}/verify`, "check DNS", "btn btn-quiet btn-sm", `Check DNS for ${domain.domain}?`) : ""}
+      ${actionForm(`/ui/domains/${esc(domain.id)}/delete`, "delete domain", "btn btn-danger btn-sm", `Delete ${domain.domain}? This removes its API keys too.`)}
+    </div>
+    ${domain.status === "verified" ? alert("ok", "Domain is verified and ready to send.") : alert("mut", "Add the DNS records above, then click check DNS.")}`;
+}
+
+export async function uiDomain(req: Req): Promise<Response> {
+  const user = gate(req);
+  if (user instanceof Response) return user;
+  const domain = await getDomainById(req.params.id);
+  if (!domain || domain.user_id !== user.id) {
+    return html(layout("Not found", `${crumbs([{ label: "domains", href: "/dashboard" }])}${alert("err", "Domain not found.")}`, user), { status: 404 });
+  }
+  const body = detailHead(domain as DomainRow, "overview") +
+    domainOverview(domain as DomainRow & { dns_records?: DnsRecord[] }, flashFrom(req));
+  return html(layout(domain.domain, body, user));
+}
+
+export async function uiDomainDns(req: Req): Promise<Response> {
+  const user = gate(req);
+  if (user instanceof Response) return user;
+  const domain = await getDomainById(req.params.id);
+  if (!domain || domain.user_id !== user.id) {
+    return new Response("Domain not found", { status: 404 });
+  }
+  const records: DnsRecord[] = Array.isArray(domain.dns_records) ? (domain.dns_records as DnsRecord[]) : [];
+  return new Response(zoneFile(domain.domain, records), {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${domain.domain}.txt"`,
+    },
+  });
+}
+
+// BIND zone file for Cloudflare's "Import DNS records" (DNS > Records > Import).
+function zoneFile(domain: string, records: DnsRecord[]): string {
+  const fqdn = (name: string) => (name.endsWith(".") ? name : `${name}.`);
+  const txt = (value: string) =>
+    `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  const lines: string[] = [
+    `; waka — DNS records for ${domain}`,
+    `; Cloudflare import: dashboard > DNS > Records > Import (BIND zone file)`,
+    `;`,
+  ];
+  for (const r of records) {
+    if (r.description) lines.push(`; ${r.description}`);
+    const name = fqdn(r.name);
+    const ttl = r.ttl ?? 300;
+    const type = r.type.toUpperCase();
+    let rdata = r.value;
+    if (type === "TXT") rdata = txt(r.value);
+    else if (type === "CNAME") rdata = fqdn(r.value);
+    // MX value already carries "<priority> <exchange.>"
+    lines.push(`${name}\t${ttl}\tIN\t${type}\t${rdata}`);
+  }
+  return lines.join("\n") + "\n";
+}
+
+// --- logs --------------------------------------------------------------------
 
 async function getDomainEmailLogs(userId: string, domainId: string) {
   const result = await query(
@@ -587,25 +617,20 @@ async function getDomainEmailLogs(userId: string, domainId: string) {
 
 function domainLogsView(logs: Array<{ id: string; from_email: string; to_emails: string[]; subject: string; status: string; created_at: string }>): string {
   const rows = logs
-    .map((r) => `<tr><td><span class="cell-muted">${esc(r.created_at)}</span></td>
-      <td>${esc(r.from_email)}</td><td><span class="cell-muted">${esc(r.to_emails.join(", "))}</span></td>
-      <td>${esc(r.subject)}</td><td><span class="badge ${esc(r.status)}">${statusDot(r.status)}${esc(r.status)}</span></td></tr>`)
+    .map(
+      (r) => `<tr>
+        <td class="t-mut">${esc(r.created_at)}</td>
+        <td>${esc(r.from_email)}</td>
+        <td class="t-mut">${esc(r.to_emails.join(", "))}</td>
+        <td>${esc(r.subject)}</td>
+        <td>${statusTag(r.status)}</td>
+      </tr>`
+    )
     .join("");
-  return `<div class="table-wrap">
-    <table><thead><tr><th>When</th><th>From</th><th>To</th><th>Subject</th><th>Status</th></tr></thead><tbody>
-    ${rows || `<tr><td colspan="5">${emptyState(ICONS.mail, "No emails sent yet", "Emails sent through this domain will appear here.")}</td></tr>`}</tbody></table>
-  </div>`;
-}
-
-export async function uiDomain(req: Req): Promise<Response> {
-  const user = gate(req);
-  if (user instanceof Response) return user;
-  const domain = await getDomainById(req.params.id);
-  if (!domain || domain.user_id !== user.id) {
-    return html(contentFragment("domains", "Domains", alert("err", "Domain not found.")));
-  }
-  const body = domainDetailShell(domain as DomainRow, "overview", domainOverview(domain as DomainRow & Partial<{ dns_records: DnsRecord[] }>));
-  return html(contentFragment("domains", domain.domain, body));
+  return `<table class="logs">
+    <thead><tr><th>when</th><th>from</th><th>to</th><th>subject</th><th>status</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="5">${emptyState("No emails yet", "Emails sent through this domain appear here.")}</td></tr>`}</tbody>
+  </table>`;
 }
 
 export async function uiDomainLogs(req: Req): Promise<Response> {
@@ -613,11 +638,53 @@ export async function uiDomainLogs(req: Req): Promise<Response> {
   if (user instanceof Response) return user;
   const domain = await getDomainById(req.params.id);
   if (!domain || domain.user_id !== user.id) {
-    return html(contentFragment("domains", "Domains", alert("err", "Domain not found.")));
+    return html(layout("Not found", `${crumbs([{ label: "domains", href: "/dashboard" }])}${alert("err", "Domain not found.")}`, user), { status: 404 });
   }
   const logs = await getDomainEmailLogs(user.id, domain.id);
-  const body = domainDetailShell(domain as DomainRow, "logs", domainLogsView(logs));
-  return html(contentFragment("domains", domain.domain, body));
+  const body = `${crumbs([{ label: "domains", href: "/dashboard" }, { label: domain.domain, href: `/ui/domains/${esc(domain.id)}` }, { label: "logs" }])}
+    <h1>${esc(domain.domain)} ${verifyDot(domain.status)}</h1>
+    ${detailTabs(domain as DomainRow, "logs")}
+    ${domainLogsView(logs)}`;
+  return html(layout(`${domain.domain} logs`, body, user));
+}
+
+// --- api keys ----------------------------------------------------------------
+
+function domainKeysView(
+  domain: DomainRow,
+  keys: Array<{ id: string; key_name: string; key_prefix: string; permissions: string[]; created_at?: string }>,
+  banner = ""
+): string {
+  const rows = keys
+    .map(
+      (k) => `<tr>
+        <td class="t-name">${esc(k.key_name)}</td>
+        <td><code>${esc(k.key_prefix)}…</code></td>
+        <td class="t-mut">${esc((k.permissions ?? []).join(", "))}</td>
+        <td class="t-mut">${formatDate(k.created_at)}</td>
+        <td class="right">${actionForm(`/ui/domains/${esc(domain.id)}/keys/${esc(k.id)}/delete`, "revoke", "act danger", `Revoke ${k.key_name}? Apps using it stop working.`)}</td>
+      </tr>`
+    )
+    .join("");
+  const form =
+    domain.status === "verified"
+      ? `<form class="toolbar" method="post" action="/ui/domains/${esc(domain.id)}/keys" hx-confirm="Create a new API key?">
+          <input name="keyName" placeholder="key name" required>
+          <button type="submit" class="btn">create key</button>
+        </form>`
+      : alert("mut", "Verify the domain before creating API keys.");
+  return `${banner}${form}
+  <table>
+    <thead><tr><th>name</th><th>prefix</th><th>permissions</th><th>created</th><th class="right">actions</th></tr></thead>
+    <tbody>${rows || `<tr><td colspan="5">${emptyState("No API keys yet", "Create a key to send email from this domain.")}</td></tr>`}</tbody>
+  </table>`;
+}
+
+function keysBody(domain: DomainRow, keys: unknown, banner = ""): string {
+  return `${crumbs([{ label: "domains", href: "/dashboard" }, { label: domain.domain, href: `/ui/domains/${esc(domain.id)}` }, { label: "api keys" }])}
+    <h1>${esc(domain.domain)} ${verifyDot(domain.status)}</h1>
+    ${detailTabs(domain, "keys")}
+    ${domainKeysView(domain, keys as never, banner)}`;
 }
 
 export async function uiDomainKeys(req: Req): Promise<Response> {
@@ -625,11 +692,10 @@ export async function uiDomainKeys(req: Req): Promise<Response> {
   if (user instanceof Response) return user;
   const domain = await getDomainById(req.params.id);
   if (!domain || domain.user_id !== user.id) {
-    return html(contentFragment("domains", "Domains", alert("err", "Domain not found.")));
+    return html(layout("Not found", `${crumbs([{ label: "domains", href: "/dashboard" }])}${alert("err", "Domain not found.")}`, user), { status: 404 });
   }
   const keys = await getDomainApiKeys(domain.id);
-  const body = domainDetailShell(domain as DomainRow, "keys", domainKeysView(domain as DomainRow, keys as never));
-  return html(contentFragment("domains", domain.domain, body));
+  return html(layout(`${domain.domain} keys`, keysBody(domain as DomainRow, keys, flashFrom(req)), user));
 }
 
 export async function uiCreateDomainKey(req: Req): Promise<Response> {
@@ -637,55 +703,36 @@ export async function uiCreateDomainKey(req: Req): Promise<Response> {
   if (user instanceof Response) return user;
   const domain = await getDomainById(req.params.id);
   if (!domain || domain.user_id !== user.id) {
-    return html(contentFragment("domains", "Domains", alert("err", "Domain not found.")));
+    return html(layout("Not found", `${crumbs([{ label: "domains", href: "/dashboard" }])}${alert("err", "Domain not found.")}`, user), { status: 404 });
   }
-  const form = await req.formData();
-  const keyName = String(form.get("keyName") ?? "").trim();
+  const keyName = String((await req.formData()).get("keyName") ?? "").trim();
   let banner = "";
   try {
     if (domain.status !== "verified") banner = alert("err", "Domain must be verified first.");
     else if (!keyName) banner = alert("err", "Key name is required.");
     else {
       const created = (await generateApiKey(user.id, domain.id, keyName)) as { key: string };
-      banner = `<div class="banner"><div class="banner-title">${ICONS.key}Copy this key now — it will not be shown again</div><div class="code-block"><code>${esc(created.key)}</code><button data-copy type="button" aria-label="Copy API key">${ICONS.copy}</button></div></div>`;
+      banner = `<div class="block">
+        <div class="block-title">Copy this key now — it is not shown again</div>
+        <div class="keyout">${copyBtn(created.key, "Copy API key")}<code>${esc(created.key)}</code></div>
+      </div>`;
     }
   } catch (err) {
     banner = alert("err", err instanceof Error ? err.message : "Failed to create key.");
   }
   const keys = await getDomainApiKeys(domain.id);
-  const body = domainDetailShell(domain as DomainRow, "keys", domainKeysView(domain as DomainRow, keys as never, banner));
-  return html(contentFragment("domains", domain.domain, body));
+  return html(layout(`${domain.domain} keys`, keysBody(domain as DomainRow, keys, banner), user));
 }
 
 export async function uiDeleteDomainKey(req: Req): Promise<Response> {
   const user = gate(req);
   if (user instanceof Response) return user;
   const domain = await getDomainById(req.params.id);
-  if (!domain || domain.user_id !== user.id) {
-    return html(contentFragment("domains", "Domains", alert("err", "Domain not found.")));
-  }
+  if (!domain || domain.user_id !== user.id) return seeOther("/dashboard");
   try {
     await deleteApiKey(req.params.keyId, user.id);
   } catch (err) {
     console.error("delete key failed:", err);
   }
-  const keys = await getDomainApiKeys(domain.id);
-  const body = domainDetailShell(domain as DomainRow, "keys", domainKeysView(domain as DomainRow, keys as never));
-  return html(contentFragment("domains", domain.domain, body));
-}
-
-export async function uiVerifyDomain(req: Req): Promise<Response> {
-  const user = gate(req);
-  if (user instanceof Response) return user;
-  const domain = await getDomainById(req.params.id);
-  if (!domain || domain.user_id !== user.id) {
-    return html(contentFragment("domains", "Domains", alert("err", "Domain not found.")));
-  }
-  const status = await checkDomainVerification(req.params.id);
-  const banner =
-    status === "verified"
-      ? alert("ok", `${domain.domain} verified.`)
-      : alert("mut", `${domain.domain} still pending — DNS may take time to propagate.`);
-  const body = domainDetailShell(domain as DomainRow, "overview", domainOverview(domain as DomainRow & Partial<{ dns_records: DnsRecord[] }>, banner));
-  return html(contentFragment("domains", domain.domain, body));
+  return seeOther(`/ui/domains/${domain.id}/keys?m=revoked`);
 }

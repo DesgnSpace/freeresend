@@ -31,10 +31,11 @@ const server = Bun.serve({
     // --- HTMX dashboard (cookie session, same JWT) ---
     "/": methods({ GET: ui.home }),
     "/login": methods({ GET: ui.loginPage, POST: ui.doLogin }),
-    "/logout": methods({ GET: ui.logout }),
+    "/logout": methods({ GET: ui.logout, POST: ui.logout }),
     "/dashboard": methods({ GET: ui.dashboard }),
     "/ui/domains": methods({ GET: ui.uiDomains, POST: ui.uiAddDomain }),
     "/ui/domains/:id": methods({ GET: ui.uiDomain }),
+    "/ui/domains/:id/dns.zone": methods({ GET: ui.uiDomainDns }),
     "/ui/domains/:id/verify": methods({ POST: ui.uiVerifyDomain }),
     "/ui/domains/:id/delete": methods({ POST: ui.uiDeleteDomain }),
     "/ui/domains/:id/logs": methods({ GET: ui.uiDomainLogs }),
