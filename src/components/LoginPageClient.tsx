@@ -10,7 +10,6 @@ export default function LoginPageClient() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to dashboard if user is already logged in
     if (user) {
       router.push("/");
     }
@@ -18,16 +17,12 @@ export default function LoginPageClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading FreeResend...</p>
-        </div>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-[#737373]">Loading...</p>
       </div>
     );
   }
 
-  // Don't show login form if user is authenticated (they'll be redirected)
   if (user) {
     return null;
   }

@@ -1,8 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Check, Clipboard, ExternalLink, FileText, ShieldCheck } from "lucide-react";
-import { deploymentReview, launchKit } from "@/config/launch-kit";
+import { Check, Clipboard, FileText } from "lucide-react";
 import { buildSesProductionRequest, type SesProductionRequestInput } from "@/lib/ses-production-request";
 
 const initialInput: SesProductionRequestInput = {
@@ -44,18 +43,16 @@ export default function SesProductionRequestHelper() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700">
-            <FileText className="h-6 w-6" />
+        <form onSubmit={handleSubmit} className="rounded-lg border border-[#e5e5e5] bg-white p-6">
+          <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-[#f5f5f5]">
+            <FileText className="h-5 w-5" />
           </div>
-          <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
-            SES production request helper
-          </h1>
-          <p className="mt-4 leading-7 text-gray-600">
+          <h1 className="text-xl font-bold">SES production request helper</h1>
+          <p className="mt-2 text-sm leading-6 text-[#525252]">
             Draft the Amazon SES production access request from public rollout details before a FreeResend launch.
           </p>
 
-          <div className="mt-7 grid gap-4">
+          <div className="mt-6 grid gap-4">
             <Field
               id="sendingDomain"
               label="Sending domain"
@@ -118,7 +115,7 @@ export default function SesProductionRequestHelper() {
 
           <button
             type="submit"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-indigo-700"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#171717] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#404040] transition-colors"
           >
             <FileText className="h-4 w-4" />
             <span>Generate request</span>
@@ -130,66 +127,33 @@ export default function SesProductionRequestHelper() {
         </form>
 
         <div className="space-y-5">
-          <article className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <article className="rounded-lg border border-[#e5e5e5] bg-white p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Draft output</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">{request.subject}</h2>
+                <p className="text-xs font-medium uppercase tracking-wide text-[#737373]">Draft output</p>
+                <h2 className="mt-1 text-lg font-bold">{request.subject}</h2>
               </div>
               <button
                 type="button"
                 onClick={() => copyText("subject", request.subject)}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#e5e5e5] px-3 py-1.5 text-xs font-medium text-[#525252] hover:text-[#171717] hover:border-[#d4d4d4] transition-colors"
               >
-                {copied === "subject" ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
+                {copied === "subject" ? <Check className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}
                 <span>Copy subject</span>
               </button>
             </div>
-            <pre className="mt-5 max-h-[560px] overflow-auto whitespace-pre-wrap rounded-lg border border-gray-100 bg-gray-950 p-4 text-sm leading-6 text-gray-100">
+            <pre className="mt-5 max-h-[560px] overflow-auto whitespace-pre-wrap rounded-lg border border-[#e5e5e5] bg-[#171717] p-4 text-xs leading-6 text-[#a3e635] font-mono">
               {request.body}
             </pre>
             <button
               type="button"
               onClick={() => copyText("body", request.body)}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#171717] px-4 py-2 text-xs font-medium text-white hover:bg-[#404040] transition-colors"
             >
-              {copied === "body" ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
+              {copied === "body" ? <Check className="h-3.5 w-3.5" /> : <Clipboard className="h-3.5 w-3.5" />}
               <span>Copy request body</span>
             </button>
           </article>
-
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
-            <div className="flex gap-3">
-              <ShieldCheck className="mt-1 h-5 w-5 flex-none text-emerald-700" />
-              <div>
-                <h2 className="text-xl font-bold text-emerald-950">Want the rollout checked first?</h2>
-                <p className="mt-2 leading-7 text-emerald-900">
-                  The {deploymentReview.price} Deployment Review covers SES sandbox status, region choice, DNS, webhook
-                  handling, and smoke-test gaps before you send production traffic.
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={deploymentReview.checkoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-emerald-700"
-              >
-                <span>Book deployment review</span>
-                <ExternalLink className="h-4 w-4" />
-              </a>
-              <a
-                href={launchKit.checkoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-white px-5 py-3 font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
-              >
-                <span>Buy launch kit</span>
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -213,7 +177,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-semibold text-gray-900">
+      <label htmlFor={id} className="text-sm font-medium">
         {label}
       </label>
       <input
@@ -222,7 +186,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
-        className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        className="mt-1 w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#171717] transition-colors"
       />
     </div>
   );
@@ -243,7 +207,7 @@ function TextArea({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-semibold text-gray-900">
+      <label htmlFor={id} className="text-sm font-medium">
         {label}
       </label>
       <textarea
@@ -252,7 +216,7 @@ function TextArea({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         rows={3}
-        className="mt-2 w-full resize-y rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        className="mt-1 w-full resize-y rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#171717] transition-colors"
       />
     </div>
   );

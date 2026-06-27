@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 
 interface Domain {
@@ -101,204 +101,166 @@ export default function ApiKeysTab() {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading API keys...</div>;
+    return <p className="text-sm text-[#737373]">Loading API keys...</p>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-xl font-semibold text-gray-900">API Keys</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Create and manage API keys for sending emails through your verified
-            domains.
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">API Keys</h2>
+          <p className="text-sm text-[#737373] mt-1">
+            Create and manage API keys for sending emails through your verified domains.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
-            onClick={() => setShowCreateForm(true)}
-            disabled={domains.length === 0}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Create API Key
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCreateForm(true)}
+          disabled={domains.length === 0}
+          className="rounded-lg bg-[#171717] px-4 py-2 text-sm font-medium text-white hover:bg-[#404040] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Create API Key
+        </button>
       </div>
 
       {domains.length === 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                No verified domains
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  You need to add and verify at least one domain before creating
-                  API keys.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="border border-amber-200 bg-amber-50 rounded-lg p-4">
+          <p className="text-sm text-amber-800">
+            No verified domains. Add and verify at least one domain before creating API keys.
+          </p>
         </div>
       )}
 
       {/* Create API Key Form */}
       {showCreateForm && domains.length > 0 && (
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              Create New API Key
-            </h3>
-            <form onSubmit={handleCreateKey} className="mt-5 space-y-4">
-              <div>
-                <label
-                  htmlFor="domain"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Domain
-                </label>
-                <select
-                  id="domain"
-                  value={newKey.domainId}
-                  onChange={(e) =>
-                    setNewKey({ ...newKey, domainId: e.target.value })
-                  }
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  required
-                >
-                  <option value="">Select a domain</option>
-                  {domains.map((domain) => (
-                    <option key={domain.id} value={domain.id}>
-                      {domain.domain}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        <div className="border border-[#e5e5e5] rounded-lg p-5">
+          <h3 className="text-sm font-semibold mb-4">Create new API key</h3>
+          <form onSubmit={handleCreateKey} className="space-y-4">
+            <div>
+              <label htmlFor="domain" className="text-sm font-medium text-[#171717]">
+                Domain
+              </label>
+              <select
+                id="domain"
+                value={newKey.domainId}
+                onChange={(e) =>
+                  setNewKey({ ...newKey, domainId: e.target.value })
+                }
+                className="mt-1 block w-full max-w-xs rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm text-[#171717] outline-none focus:border-[#171717] transition-colors"
+                required
+              >
+                <option value="">Select a domain</option>
+                {domains.map((domain) => (
+                  <option key={domain.id} value={domain.id}>
+                    {domain.domain}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <label
-                  htmlFor="keyName"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Key Name
-                </label>
-                <input
-                  type="text"
-                  id="keyName"
-                  value={newKey.keyName}
-                  onChange={(e) =>
-                    setNewKey({ ...newKey, keyName: e.target.value })
-                  }
-                  placeholder="e.g., Production Key, Development Key"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  required
-                />
-              </div>
+            <div>
+              <label htmlFor="keyName" className="text-sm font-medium text-[#171717]">
+                Key Name
+              </label>
+              <input
+                type="text"
+                id="keyName"
+                value={newKey.keyName}
+                onChange={(e) =>
+                  setNewKey({ ...newKey, keyName: e.target.value })
+                }
+                placeholder="e.g., Production Key, Development Key"
+                className="mt-1 block w-full max-w-xs rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm text-[#171717] outline-none focus:border-[#171717] transition-colors"
+                required
+              />
+            </div>
 
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {creating ? "Creating..." : "Create Key"}
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                className="rounded-lg border border-[#e5e5e5] px-4 py-2 text-sm text-[#525252] hover:text-[#171717] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="rounded-lg bg-[#171717] px-4 py-2 text-sm text-white hover:bg-[#404040] transition-colors disabled:opacity-50"
+              >
+                {creating ? "Creating..." : "Create Key"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
       {/* Created API Key Display */}
       {createdKey && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">
-                API Key Created Successfully!
-              </h3>
-              <div className="mt-2 text-sm text-green-700">
-                <p className="mb-2">
-                  Save this API key now - it will not be shown again:
-                </p>
-                <div className="bg-white p-3 rounded border font-mono text-sm break-all">
-                  {createdKey}
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(createdKey);
-                    alert("API key copied to clipboard!");
-                  }}
-                  className="mt-2 text-green-600 hover:text-green-800 text-sm font-medium"
-                >
-                  Copy to clipboard
-                </button>
-              </div>
-              <button
-                onClick={() => setCreatedKey(null)}
-                className="mt-3 text-sm font-medium text-green-600 hover:text-green-800"
-              >
-                Dismiss
-              </button>
-            </div>
+        <div className="border border-green-200 bg-green-50 rounded-lg p-4">
+          <p className="text-sm font-medium text-green-800 mb-1">
+            API Key Created Successfully!
+          </p>
+          <p className="text-xs text-green-700 mb-2">
+            Save this API key now — it will not be shown again:
+          </p>
+          <div className="bg-white border border-green-200 rounded p-3 font-mono text-sm break-all">
+            {createdKey}
           </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(createdKey);
+              alert("API key copied to clipboard!");
+            }}
+            className="mt-2 text-xs text-green-700 hover:text-green-900"
+          >
+            Copy to clipboard
+          </button>
+          <button
+            onClick={() => setCreatedKey(null)}
+            className="block mt-2 text-xs text-green-700 hover:text-green-900"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
       {/* API Keys List */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="border border-[#e5e5e5] rounded-lg overflow-hidden">
         {apiKeys.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No API keys created yet. Create your first API key to start sending
-            emails.
-          </div>
+          <p className="text-sm text-[#a3a3a3] p-5 text-center">
+            No API keys created yet. Create your first API key to start sending emails.
+          </p>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-[#e5e5e5]">
             {apiKeys.map((key) => (
-              <li key={key.id}>
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {key.key_name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Domain: {key.domains?.domain || "Unknown"}
-                      </div>
-                      <div className="text-xs text-gray-500 font-mono">
-                        {maskApiKey(key.key_prefix)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Created {new Date(key.created_at).toLocaleDateString()}
-                        {key.last_used_at && (
-                          <span>
-                            {" "}
-                            • Last used{" "}
-                            {new Date(key.last_used_at).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {key.permissions.join(", ")}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteKey(key.id)}
-                        className="text-red-600 hover:text-red-900 text-sm font-medium"
-                      >
-                        Delete
-                      </button>
-                    </div>
+              <li key={key.id} className="px-5 py-4 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">{key.key_name}</div>
+                  <div className="text-xs text-[#a3a3a3]">
+                    Domain: {key.domains?.domain || "Unknown"}
                   </div>
+                  <div className="text-xs text-[#a3a3a3] font-mono">
+                    {maskApiKey(key.key_prefix)}
+                  </div>
+                  <div className="text-xs text-[#a3a3a3]">
+                    Created {new Date(key.created_at).toLocaleDateString()}
+                    {key.last_used_at && (
+                      <span>
+                        {" "}• Last used {new Date(key.last_used_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs bg-[#f5f5f5] border border-[#e5e5e5] rounded px-2 py-0.5">
+                    {key.permissions.join(", ")}
+                  </span>
+                  <button
+                    onClick={() => handleDeleteKey(key.id)}
+                    className="text-xs text-red-600 hover:text-red-800 transition-colors"
+                  >
+                    Delete
+                  </button>
                 </div>
               </li>
             ))}

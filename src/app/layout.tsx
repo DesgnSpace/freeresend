@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -15,25 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FreeResend - Self-hosted Email Service | 85% Cost Savings",
+  title: "FreeResend — Open-source Resend alternative",
   description:
-    "Open-source, self-hosted alternative to Resend. 100% API compatible with 85% cost savings using Amazon SES. Drop-in replacement with auto DNS setup.",
-  keywords: "resend alternative, self-hosted email, amazon ses, transactional email, email api, open source",
-  authors: [{ name: "FreeResend Contributors", url: "https://github.com/eibrahim/freeresend" }],
-  creator: "FreeResend Contributors",
-  openGraph: {
-    title: "FreeResend - Self-hosted Alternative to Resend",
-    description: "100% API compatible • 85% cost savings • Complete control over your email infrastructure",
-    url: "https://freeresend.com",
-    siteName: "FreeResend",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "FreeResend - Self-hosted Alternative to Resend",
-    description: "100% API compatible • 85% cost savings • Complete control over your email infrastructure",
-    creator: "@freeresend",
-  },
+    "Self-hosted transactional email API. Drop-in Resend replacement using Amazon SES.",
 };
 
 export default function RootLayout({
@@ -43,10 +26,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-[#171717]`}
       >
         <AuthProvider>{children}</AuthProvider>
       </body>

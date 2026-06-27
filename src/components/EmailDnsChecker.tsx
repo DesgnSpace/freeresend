@@ -4,21 +4,19 @@ import { FormEvent, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
-  ExternalLink,
   Info,
   Loader2,
   MailCheck,
   Search,
   XCircle,
 } from "lucide-react";
-import { deploymentReview, launchKit } from "@/config/launch-kit";
 import type { EmailDnsAssessment, EmailDnsCheck, EmailDnsStatus } from "@/lib/email-dns-readiness";
 
 const statusStyles: Record<EmailDnsStatus, { label: string; icon: typeof CheckCircle2; className: string }> = {
   pass: {
     label: "Pass",
     icon: CheckCircle2,
-    className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    className: "border-green-200 bg-green-50 text-green-800",
   },
   warn: {
     label: "Review",
@@ -51,28 +49,28 @@ function StatusPill({ status }: { status: EmailDnsStatus }) {
 
 function CheckCard({ check }: { check: EmailDnsCheck }) {
   return (
-    <article className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+    <article className="rounded-lg border border-[#e5e5e5] bg-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">{check.title}</h3>
-          <p className="mt-1 text-sm text-gray-600">{check.summary}</p>
+          <h3 className="text-sm font-semibold">{check.title}</h3>
+          <p className="mt-1 text-xs text-[#525252]">{check.summary}</p>
         </div>
         <StatusPill status={check.status} />
       </div>
 
-      <ul className="mt-4 space-y-2 text-sm leading-6 text-gray-600">
+      <ul className="mt-4 space-y-1.5 text-xs leading-6 text-[#525252]">
         {check.details.map((detail) => (
           <li key={detail} className="flex gap-2">
-            <span className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-gray-400" />
+            <span className="mt-2 h-1 w-1 flex-none rounded-full bg-[#d4d4d4]" />
             <span>{detail}</span>
           </li>
         ))}
       </ul>
 
       {check.records.length > 0 ? (
-        <div className="mt-4 overflow-hidden rounded-md border border-gray-100 bg-gray-50">
+        <div className="mt-4 rounded-md border border-[#e5e5e5] bg-[#fafafa]">
           {check.records.map((record) => (
-            <code key={record} className="block break-words px-3 py-2 text-xs leading-5 text-gray-700">
+            <code key={record} className="block break-words px-3 py-1.5 text-xs leading-5 text-[#525252]">
               {record}
             </code>
           ))}
@@ -93,7 +91,7 @@ export default function EmailDnsChecker() {
     if (!result) return "Check your sending domain";
     if (result.overallStatus === "fail") return "Fix these records before launch";
     if (result.overallStatus === "warn") return "Review these DNS warnings";
-    return "DNS looks ready for a closer launch pass";
+    return "DNS looks ready";
   }, [result]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -125,20 +123,20 @@ export default function EmailDnsChecker() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-            <MailCheck className="h-6 w-6" />
+        <div className="rounded-lg border border-[#e5e5e5] bg-white p-6">
+          <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg bg-[#f5f5f5]">
+            <MailCheck className="h-5 w-5" />
           </div>
-          <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
+          <h1 className="text-xl font-bold">
             Email DNS readiness checker
           </h1>
-          <p className="mt-4 leading-7 text-gray-600">
+          <p className="mt-2 text-sm leading-6 text-[#525252]">
             Check SPF, DMARC, MX, and one DKIM selector before moving a FreeResend or Amazon SES domain into production.
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="domain" className="text-sm font-semibold text-gray-900">
+              <label htmlFor="domain" className="text-sm font-medium">
                 Sending domain
               </label>
               <input
@@ -146,13 +144,13 @@ export default function EmailDnsChecker() {
                 value={domain}
                 onChange={(event) => setDomain(event.target.value)}
                 placeholder="example.com"
-                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="mt-1 w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#171717] transition-colors"
                 autoComplete="off"
               />
             </div>
 
             <div>
-              <label htmlFor="dkimSelector" className="text-sm font-semibold text-gray-900">
+              <label htmlFor="dkimSelector" className="text-sm font-medium">
                 DKIM selector
               </label>
               <input
@@ -160,7 +158,7 @@ export default function EmailDnsChecker() {
                 value={dkimSelector}
                 onChange={(event) => setDkimSelector(event.target.value)}
                 placeholder="optional"
-                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="mt-1 w-full rounded-lg border border-[#e5e5e5] px-3 py-2 text-sm outline-none focus:border-[#171717] transition-colors"
                 autoComplete="off"
               />
             </div>
@@ -168,7 +166,7 @@ export default function EmailDnsChecker() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#171717] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#404040] transition-colors disabled:bg-[#a3a3a3] disabled:cursor-not-allowed"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               <span>{loading ? "Checking DNS" : "Run DNS check"}</span>
@@ -185,16 +183,15 @@ export default function EmailDnsChecker() {
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-lg border border-[#e5e5e5] bg-white p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#737373]">
                   {result?.domain ?? "FreeResend"}
                 </p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">{resultTitle}</h2>
-                <p className="mt-2 leading-7 text-gray-600">
-                  {result?.summary ??
-                    "Run the checker to see the records that most often block SES launches, then use the launch kit or review offer for the remaining rollout work."}
+                <h2 className="mt-1 text-lg font-bold">{resultTitle}</h2>
+                <p className="mt-1 text-sm leading-6 text-[#525252]">
+                  {result?.summary ?? "Run the checker to see which DNS records need attention before launch."}
                 </p>
               </div>
               {result ? <StatusPill status={result.overallStatus} /> : null}
@@ -210,7 +207,7 @@ export default function EmailDnsChecker() {
               </div>
 
               {result.lookupErrors.length > 0 ? (
-                <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600">
+                <div className="rounded-lg border border-[#e5e5e5] bg-white p-4 text-sm text-[#525252]">
                   DNS lookup warnings: {result.lookupErrors.join("; ")}
                 </div>
               ) : null}
@@ -218,43 +215,15 @@ export default function EmailDnsChecker() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {["SPF", "DMARC", "DKIM", "MX"].map((item) => (
-                <div key={item} className="rounded-lg border border-dashed border-gray-200 bg-white p-5 text-gray-500">
-                  <div className="h-2 w-16 rounded-full bg-gray-100" />
-                  <div className="mt-4 text-lg font-semibold text-gray-700">{item}</div>
-                  <div className="mt-3 h-2 w-full rounded-full bg-gray-100" />
-                  <div className="mt-2 h-2 w-2/3 rounded-full bg-gray-100" />
+                <div key={item} className="rounded-lg border border-dashed border-[#e5e5e5] bg-white p-5">
+                  <div className="h-2 w-14 rounded bg-[#f5f5f5]" />
+                  <div className="mt-4 text-sm font-semibold text-[#a3a3a3]">{item}</div>
+                  <div className="mt-3 h-2 w-full rounded bg-[#f5f5f5]" />
+                  <div className="mt-2 h-2 w-2/3 rounded bg-[#f5f5f5]" />
                 </div>
               ))}
             </div>
           )}
-
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
-            <h2 className="text-xl font-bold text-emerald-950">Need a production pass?</h2>
-            <p className="mt-2 leading-7 text-emerald-900">
-              The checker only sees public DNS. The {deploymentReview.price} Deployment Review covers SES sandbox status,
-              region choice, DKIM alignment, webhook gaps, and the next launch fixes from your deployment URL.
-            </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={deploymentReview.checkoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-emerald-700"
-              >
-                <span>Book review for {deploymentReview.price}</span>
-                <ExternalLink className="h-4 w-4" />
-              </a>
-              <a
-                href={launchKit.checkoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-white px-5 py-3 font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
-              >
-                <span>Buy launch kit</span>
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </section>

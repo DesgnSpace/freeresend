@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 
 interface WaitlistSignupProps {
@@ -8,23 +8,12 @@ interface WaitlistSignupProps {
   onSuccess?: () => void;
   compact?: boolean;
   className?: string;
-  trackingContext?: string; // For analytics tracking
-}
-
-interface UTMParams {
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
 }
 
 interface FormData {
   email: string;
   estimatedVolume?: number;
   currentProvider?: string;
-  referralSource?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
 }
 
 interface ApiResponse {
@@ -49,18 +38,6 @@ interface FormState {
   optimisticSubmit: boolean;
 }
 
-// Utility function to capture UTM parameters from URL
-const captureUTMParams = (): UTMParams => {
-  if (typeof window === "undefined") return {};
-  
-  const urlParams = new URLSearchParams(window.location.search);
-  return {
-    utmSource: urlParams.get("utm_source") || undefined,
-    utmMedium: urlParams.get("utm_medium") || undefined,
-    utmCampaign: urlParams.get("utm_campaign") || undefined,
-  };
-};
-
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -69,7 +46,6 @@ export default function WaitlistSignup({
   onSuccess,
   compact = false,
   className = "",
-  trackingContext = "unknown",
 }: WaitlistSignupProps) {
   // Consolidated state management
   const [formState, setFormState] = useState<FormState>({
@@ -83,39 +59,6 @@ export default function WaitlistSignup({
     retryCount: 0,
     optimisticSubmit: false,
   });
-  
-  const [utmParams, setUtmParams] = useState<UTMParams>({});
-
-  // Analytics tracking function
-  const trackEvent = useCallback((eventName: string, properties: Record<string, unknown> = {}) => {
-    // Track form interactions for analytics
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("event", eventName, {
-        ...properties,
-        timestamp: new Date().toISOString(),
-        user_agent: navigator.userAgent,
-        referrer: document.referrer,
-        ...utmParams,
-      });
-    }
-    
-    // Console log for development
-    if (process.env.NODE_ENV === "development") {
-      console.log("Analytics Event:", eventName, properties);
-    }
-  }, [utmParams]);
-
-  // Capture UTM parameters on mount
-  useEffect(() => {
-    setUtmParams(captureUTMParams());
-    
-    // Track form view for analytics
-    trackEvent("waitlist_form_viewed", {
-      context: trackingContext,
-      has_estimated_volume: !!estimatedVolume,
-      compact_mode: compact,
-    });
-  }, [trackingContext, estimatedVolume, compact, trackEvent]);
 
   // Real-time email validation with debouncing
   useEffect(() => {
@@ -137,25 +80,17 @@ export default function WaitlistSignup({
   }, [formState.email]);
 
   // Optimistic UI update
-  const handleOptimisticUpdate = useCallback(() => {
+  const handleOptimisticUpdate = () => {
     setFormState(prev => ({
       ...prev,
       optimisticSubmit: true,
       loading: true,
       error: "",
     }));
-
-    // Track optimistic submission
-    trackEvent("waitlist_form_submitted_optimistic", {
-      context: trackingContext,
-      email_domain: formState.email.split("@")[1],
-      has_volume: !!formState.volume,
-      has_provider: !!formState.currentProvider,
-    });
-  }, [trackingContext, formState.email, formState.volume, formState.currentProvider, trackEvent]);
+  };
 
   // Error recovery with retry logic
-  const handleRetry = useCallback(() => {
+  const handleRetry = () => {
     setFormState(prev => ({
       ...prev,
       error: "",
@@ -163,17 +98,12 @@ export default function WaitlistSignup({
       optimisticSubmit: false,
       retryCount: prev.retryCount + 1,
     }));
-
-    trackEvent("waitlist_form_retry", {
-      context: trackingContext,
-      retry_count: formState.retryCount + 1,
-    });
-  }, [trackingContext, formState.retryCount, trackEvent]);
+  };
 
   // Enhanced form submission with optimistic updates and error recovery
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Clear previous errors
     setFormState(prev => ({
       ...prev,
@@ -187,10 +117,6 @@ export default function WaitlistSignup({
         ...prev,
         emailError: "Email is required"
       }));
-      trackEvent("waitlist_form_validation_error", {
-        context: trackingContext,
-        error_type: "email_required",
-      });
       return;
     }
 
@@ -199,10 +125,6 @@ export default function WaitlistSignup({
         ...prev,
         emailError: "Please enter a valid email address"
       }));
-      trackEvent("waitlist_form_validation_error", {
-        context: trackingContext,
-        error_type: "email_invalid",
-      });
       return;
     }
 
@@ -215,8 +137,6 @@ export default function WaitlistSignup({
         email: formState.email.trim(),
         estimatedVolume: formState.volume ? parseInt(formState.volume.toString(), 10) : undefined,
         currentProvider: formState.currentProvider.trim() || undefined,
-        referralSource: (typeof document !== "undefined" ? document.referrer : "") || undefined,
-        ...utmParams,
       };
 
       // Submit to API with timeout
@@ -247,16 +167,6 @@ export default function WaitlistSignup({
         optimisticSubmit: false,
       }));
 
-      // Track successful submission
-      trackEvent("waitlist_form_submitted_success", {
-        context: trackingContext,
-        email_domain: formState.email.split("@")[1],
-        has_volume: !!formState.volume,
-        has_provider: !!formState.currentProvider,
-        retry_count: formState.retryCount,
-        signup_id: result.data?.id,
-      });
-
       onSuccess?.();
     } catch (err: unknown) {
       const errorObj = err as { message?: string; name?: string };
@@ -282,14 +192,6 @@ export default function WaitlistSignup({
         loading: false,
         optimisticSubmit: false,
       }));
-
-      // Track submission error
-      trackEvent("waitlist_form_submitted_error", {
-        context: trackingContext,
-        error_type: errorType,
-        error_message: errorMessage,
-        retry_count: formState.retryCount,
-      });
     }
   };
 
@@ -341,17 +243,6 @@ export default function WaitlistSignup({
             value={formState.email}
             onChange={(e) => {
               setFormState(prev => ({ ...prev, email: e.target.value }));
-              trackEvent("waitlist_form_email_input", {
-                context: trackingContext,
-                has_value: !!e.target.value,
-              });
-            }}
-            onBlur={() => {
-              trackEvent("waitlist_form_email_blur", {
-                context: trackingContext,
-                email_domain: formState.email.split("@")[1] || "",
-                is_valid: EMAIL_REGEX.test(formState.email),
-              });
             }}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
               formState.emailError ? "border-red-300" : "border-gray-300"
@@ -369,7 +260,7 @@ export default function WaitlistSignup({
           )}
         </div>
 
-        {/* Volume Input with analytics tracking */}
+        {/* Volume Input */}
         <div>
           <label htmlFor="waitlist-volume" className="block text-sm font-medium text-gray-700 mb-1">
             Expected Monthly Email Volume (optional)
@@ -380,10 +271,6 @@ export default function WaitlistSignup({
             value={formState.volume}
             onChange={(e) => {
               setFormState(prev => ({ ...prev, volume: e.target.value }));
-              trackEvent("waitlist_form_volume_input", {
-                context: trackingContext,
-                volume: parseInt(e.target.value) || 0,
-              });
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             placeholder="e.g., 50000"
@@ -395,7 +282,7 @@ export default function WaitlistSignup({
           </p>
         </div>
 
-        {/* Current Provider Input with tracking */}
+        {/* Current Provider Input */}
         {!compact && (
           <div>
             <label htmlFor="waitlist-provider" className="block text-sm font-medium text-gray-700 mb-1">
@@ -407,10 +294,6 @@ export default function WaitlistSignup({
               value={formState.currentProvider}
               onChange={(e) => {
                 setFormState(prev => ({ ...prev, currentProvider: e.target.value }));
-                trackEvent("waitlist_form_provider_input", {
-                  context: trackingContext,
-                  provider: e.target.value.toLowerCase(),
-                });
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="e.g., Resend, SendGrid, Mailgun"
@@ -447,16 +330,8 @@ export default function WaitlistSignup({
         {/* Enhanced Submit Button with Optimistic UI */}
         <button
           type="submit"
-          disabled={formState.loading || !!formState.emailError || !formState.email}
+          disabled={formState.loading || !!formState.emailError}
           className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          onClick={() => {
-            trackEvent("waitlist_form_submit_clicked", {
-              context: trackingContext,
-              has_email: !!formState.email,
-              has_volume: !!formState.volume,
-              has_provider: !!formState.currentProvider,
-            });
-          }}
         >
           {formState.loading ? (
             <>

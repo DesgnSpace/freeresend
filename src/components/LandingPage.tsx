@@ -1,357 +1,123 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import {
-  Code,
-  DollarSign,
-  Globe,
-  Shield,
-  Star,
-  Zap,
-  Github,
-  Copy,
-  CheckCircle,
-} from "lucide-react";
-import EnvelopeIcon from "./EnvelopeIcon";
+import { Github } from "lucide-react";
 
 export default function LandingPage() {
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  const copyCodeSnippet = () => {
-    navigator.clipboard.writeText(
-      `RESEND_BASE_URL="https://freeresend.com/api"`
-    );
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <EnvelopeIcon className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                FreeResend
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <a
-                href="https://github.com/eibrahim/freeresend"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <Github className="h-5 w-5" />
-                <span className="hidden sm:inline">GitHub</span>
-              </a>
-              <Link
-                href="/login"
-                className="text-gray-600 hover:text-gray-900 transition-colors px-3 py-2"
-              >
-                Login
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            The{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Self-Hosted
-            </span>
-            <br />
-            Alternative to Resend
-          </h2>
-
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            100% API compatible • 85% cost savings • Complete control over your
-            email infrastructure
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+    <div className="min-h-screen flex flex-col">
+      <header className="border-b border-[#e5e5e5]">
+        <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
+          <span className="font-semibold text-sm">FreeResend</span>
+          <div className="flex items-center gap-5 text-sm">
             <a
               href="https://github.com/eibrahim/freeresend"
               target="_blank"
               rel="noopener noreferrer"
-              className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-lg hover:border-gray-300 transition-colors flex items-center justify-center space-x-2 font-semibold"
+              className="text-[#525252] hover:text-[#171717]"
             >
-              <Github className="h-5 w-5" />
-              <span>View on GitHub</span>
+              <Github className="h-4 w-4" />
             </a>
-          </div>
-          
-          <div className="text-center mb-8">
-            <p className="text-sm text-gray-500">
-              Already have an account?{" "}
-              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                Login here
-              </Link>
-            </p>
-          </div>
-
-          {/* Migration Code Example */}
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-gray-900 rounded-lg p-6 text-left overflow-x-auto">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-400 text-sm">
-                  Migration is literally one line:
-                </span>
-                <button
-                  onClick={copyCodeSnippet}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  {copiedCode ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              <code className="text-green-400 font-mono text-sm block whitespace-nowrap">
-                RESEND_BASE_URL=&quot;https://freeresend.com/api&quot;
-              </code>
-              <p className="text-gray-400 text-sm mt-2">
-                That&apos;s it. Your existing Resend code works unchanged.
-              </p>
-            </div>
+            <Link href="/login" className="text-[#525252] hover:text-[#171717]">
+              Login
+            </Link>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Key Benefits */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose FreeResend?
-            </h3>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Get all the benefits of premium email services without the premium
-              price tag
+      <main className="flex-1 mx-auto max-w-3xl px-6 py-20">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Self-hosted transactional email API
+        </h1>
+        <p className="mt-4 text-[#525252] leading-7 max-w-2xl">
+          Drop-in Resend replacement using Amazon SES. Set{" "}
+          <code className="text-sm bg-[#f5f5f5] px-1.5 py-0.5 rounded font-mono">
+            RESEND_BASE_URL
+          </code>{" "}
+          and your existing Resend SDK code works unchanged.
+        </p>
+
+        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <a
+            href="https://github.com/eibrahim/freeresend"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#171717] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#404040] transition-colors"
+          >
+            <Github className="h-4 w-4" />
+            View on GitHub
+          </a>
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center rounded-lg border border-[#e5e5e5] px-5 py-2.5 text-sm font-medium text-[#525252] hover:text-[#171717] hover:border-[#d4d4d4] transition-colors"
+          >
+            Open dashboard
+          </Link>
+        </div>
+
+        <hr className="my-16 border-[#e5e5e5]" />
+
+        <div className="grid sm:grid-cols-2 gap-x-12 gap-y-8 text-sm">
+          <div>
+            <h2 className="font-semibold text-[#171717] mb-2">API compatible</h2>
+            <p className="text-[#525252] leading-6">
+              Use the Resend Node.js SDK or raw HTTPS. Set one env var, no code changes.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <DollarSign className="h-8 w-8 text-white" />
-              </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-4">
-                85% Cost Savings
-              </h4>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Pay Amazon SES rates ($0.10/1k emails) instead of premium
-                pricing. Save hundreds annually across multiple projects.
-              </p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
-                <div className="font-semibold text-green-800 mb-1">Quick Example:</div>
-                <div className="text-green-700">
-                  100k emails/month: <span className="font-semibold">$10</span> vs Resend&apos;s <span className="line-through">$100</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Code className="h-8 w-8 text-white" />
-              </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-4">
-                Drop-in Compatible
-              </h4>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                100% API compatibility with Resend. Zero code changes required -
-                just update your environment variable.
-              </p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-                <div className="font-semibold text-blue-800 mb-1">Zero Code Changes:</div>
-                <div className="text-blue-700">
-                  Just update RESEND_BASE_URL and your existing Resend code works unchanged.
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Zap className="h-8 w-8 text-white" />
-              </div>
-              <h4 className="text-xl font-semibold text-gray-900 mb-4">
-                Lightning Setup
-              </h4>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Auto-creates DNS records with Digital Ocean. From domain to
-                sending emails in under 60 seconds.
-              </p>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm">
-                <div className="font-semibold text-purple-800 mb-1">Auto DNS Setup:</div>
-                <div className="text-purple-700">
-                  Digital Ocean integration for automatic DNS record creation. From domain to sending in under 60 seconds.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need
-            </h3>
-            <p className="text-lg text-gray-600">
-              Production-ready features for modern email infrastructure
+          <div>
+            <h2 className="font-semibold text-[#171717] mb-2">DKIM signing</h2>
+            <p className="text-[#525252] leading-6">
+              Automatic DKIM key generation and DNS record creation per domain.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Shield className="h-6 w-6" />,
-                title: "Enterprise Security",
-                description:
-                  "DKIM signing, SPF, DMARC, and full AWS security compliance",
-              },
-              {
-                icon: <Globe className="h-6 w-6" />,
-                title: "Multi-Domain Support",
-                description:
-                  "Manage unlimited domains with automatic verification and setup",
-              },
-              {
-                icon: <Star className="h-6 w-6" />,
-                title: "Email Analytics",
-                description:
-                  "Comprehensive logging, delivery tracking, and performance metrics",
-              },
-              {
-                icon: <Code className="h-6 w-6" />,
-                title: "API-First Design",
-                description:
-                  "RESTful APIs with comprehensive documentation and SDK compatibility",
-              },
-              {
-                icon: <Zap className="h-6 w-6" />,
-                title: "Webhook Support",
-                description:
-                  "Real-time event notifications for bounces, complaints, and delivery",
-              },
-              {
-                icon: <Github className="h-6 w-6" />,
-                title: "Open Source",
-                description:
-                  "MIT licensed, community-driven, and fully customizable",
-              },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <div className="text-blue-600">{feature.icon}</div>
-                </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  {feature.title}
-                </h4>
-                <p className="text-gray-600">{feature.description}</p>
-              </div>
-            ))}
+          <div>
+            <h2 className="font-semibold text-[#171717] mb-2">Self-contained</h2>
+            <p className="text-[#525252] leading-6">
+              One Docker compose, one env file, one migration. PostgreSQL + SES.
+            </p>
           </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <EnvelopeIcon className="h-5 w-5 text-white" />
-                </div>
-                <h4 className="text-xl font-bold">FreeResend</h4>
-              </div>
-              <p className="text-gray-400">
-                Open-source, self-hosted email service compatible with Resend.
-              </p>
-            </div>
-
-            <div>
-              <h5 className="font-semibold mb-4">Resources</h5>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="https://github.com/eibrahim/freeresend"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    GitHub
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/eibrahim/freeresend/issues"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Issues
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/eibrahim/freeresend/discussions"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Discussions
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/eibrahim/freeresend/blob/main/CONTRIBUTING.md"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    Contributing
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="font-semibold mb-4">Legal</h5>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="https://github.com/eibrahim/freeresend/blob/main/LICENSE"
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    MIT License
-                  </a>
-                </li>
-              </ul>
-            </div>
+          <div>
+            <h2 className="font-semibold text-[#171717] mb-2">Email logs</h2>
+            <p className="text-[#525252] leading-6">
+              Track delivery status, bounces, and complaints per message.
+            </p>
           </div>
-
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400">
-              MIT Licensed — Fork of the{" "}
-              <a
-                href="https://github.com/eibrahim/freeresend"
-                className="text-blue-400 hover:text-blue-300"
-              >
-                original FreeResend
-              </a>{" "}
-              by Emad Ibrahim
+          <div>
+            <h2 className="font-semibold text-[#171717] mb-2">MIT licensed</h2>
+            <p className="text-[#525252] leading-6">
+              Free to self-host, fork, modify. No paid tiers, no feature gates.
+            </p>
+          </div>
+          <div>
+            <h2 className="font-semibold text-[#171717] mb-2">SMTP support</h2>
+            <p className="text-[#525252] leading-6">
+              Per-domain SMTP credentials for legacy senders.
             </p>
           </div>
         </div>
+
+        {/* Code example */}
+        <div className="mt-16">
+          <h2 className="text-sm font-semibold text-[#171717] mb-3">Quick start</h2>
+          <pre className="bg-[#171717] text-[#a3e635] p-4 rounded-lg text-sm overflow-x-auto leading-6 font-mono">
+            <span className="text-[#737373]"># Set your FreeResend instance URL</span>{"\n"}
+            export RESEND_BASE_URL="https://email.example.com/api"
+            {"\n\n"}
+            <span className="text-[#737373]"># Use Resend SDK as usual</span>{"\n"}
+            import &#123; Resend &#125; from "resend"{"\n"}
+            const resend = new Resend("frs_your-api-key"){"\n\n"}
+            await resend.emails.send(&#123;{"\n"}
+            &nbsp;&nbsp;from: "hello@example.com",{"\n"}
+            &nbsp;&nbsp;to: ["user@email.com"],{"\n"}
+            &nbsp;&nbsp;subject: "Hello",{"\n"}
+            &nbsp;&nbsp;html: "&lt;strong&gt;it works!&lt;/strong&gt;",{"\n"}
+            &#125;)
+          </pre>
+        </div>
+      </main>
+
+      <footer className="border-t border-[#e5e5e5] py-6 text-center text-xs text-[#a3a3a3]">
+        MIT Licensed &middot; FreeResend
       </footer>
     </div>
   );

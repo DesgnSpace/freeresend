@@ -1,5 +1,9 @@
 import LoginPageClient from "@/components/LoginPageClient";
 
 export default function LoginPage() {
-  return <LoginPageClient />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <LoginPageClient />
+    </div>
+  );
 }
