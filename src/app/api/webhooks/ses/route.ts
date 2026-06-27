@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/database";
+import { validateSnsMessage, confirmSubscription, type SnsMessage } from "@/lib/sns";
+
+// SNS validation uses Node crypto; force the Node.js runtime (not Edge).
+export const runtime = "nodejs";
 
 interface SESMessage {
   eventType: "send" | "delivery" | "bounce" | "complaint" | "reject";
@@ -39,21 +43,39 @@ interface SESMessage {
 
 async function handleSESWebhook(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as SnsMessage;
 
-    // Handle SNS confirmation
-    if (body.Type === "SubscriptionConfirmation") {
-      console.log("SNS Subscription confirmation received");
-      // You would typically confirm the subscription here
-      return NextResponse.json({ message: "Subscription confirmed" });
+    // Reject anything without a valid AWS SNS signature.
+    const valid = await validateSnsMessage(body);
+    if (!valid) {
+      console.warn("Rejected SNS message with invalid signature");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
     }
 
-    // Handle SNS notification
+    // Optionally pin to a specific topic (set SES_SNS_TOPIC_ARN to enable).
+    const expectedTopic = process.env.SES_SNS_TOPIC_ARN;
+    if (expectedTopic && body.TopicArn !== expectedTopic) {
+      console.warn(`Rejected SNS message from unexpected topic: ${body.TopicArn}`);
+      return NextResponse.json({ error: "Unexpected topic" }, { status: 403 });
+    }
+
+    // Auto-confirm subscriptions (signature already verified above).
+    if (body.Type === "SubscriptionConfirmation") {
+      const confirmed = await confirmSubscription(body);
+      return NextResponse.json(
+        { message: confirmed ? "Subscription confirmed" : "Confirmation failed" },
+        { status: confirmed ? 200 : 502 }
+      );
+    }
+
+    if (body.Type === "UnsubscribeConfirmation") {
+      console.log(`SNS unsubscribe confirmation for topic ${body.TopicArn}`);
+      return NextResponse.json({ message: "Acknowledged" });
+    }
+
     if (body.Type === "Notification") {
       const message: SESMessage = JSON.parse(body.Message);
-
       await processSESEvent(message);
-
       return NextResponse.json({ message: "Event processed" });
     }
 
