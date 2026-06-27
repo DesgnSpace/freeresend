@@ -171,19 +171,13 @@ export default function WaitlistSignup({
     } catch (err: unknown) {
       const errorObj = err as { message?: string; name?: string };
       let errorMessage = "Failed to join waitlist. Please try again.";
-      let errorType = "unknown";
 
       if (errorObj.name === "AbortError") {
         errorMessage = "Request timed out. Please check your connection and try again.";
-        errorType = "timeout";
       } else if (errorObj.message?.includes("409")) {
         errorMessage = "This email is already on our waitlist.";
-        errorType = "duplicate";
       } else if (errorObj.message) {
         errorMessage = errorObj.message;
-        errorType = "api_error";
-      } else {
-        errorType = "network_error";
       }
 
       setFormState(prev => ({

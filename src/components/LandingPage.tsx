@@ -101,16 +101,16 @@ export default function LandingPage() {
           <h2 className="text-sm font-semibold text-[#171717] mb-3">Quick start</h2>
           <pre className="bg-[#171717] text-[#a3e635] p-4 rounded-lg text-sm overflow-x-auto leading-6 font-mono">
             <span className="text-[#737373]"># Set your FreeResend instance URL</span>{"\n"}
-            export RESEND_BASE_URL="https://email.example.com/api"
+            export RESEND_BASE_URL=&quot;https://email.example.com/api&quot;
             {"\n\n"}
             <span className="text-[#737373]"># Use Resend SDK as usual</span>{"\n"}
-            import &#123; Resend &#125; from "resend"{"\n"}
-            const resend = new Resend("frs_your-api-key"){"\n\n"}
+            import &#123; Resend &#125; from &quot;resend&quot;{"\n"}
+            const resend = new Resend(&quot;frs_your-api-key&quot;){"\n\n"}
             await resend.emails.send(&#123;{"\n"}
-            &nbsp;&nbsp;from: "hello@example.com",{"\n"}
-            &nbsp;&nbsp;to: ["user@email.com"],{"\n"}
-            &nbsp;&nbsp;subject: "Hello",{"\n"}
-            &nbsp;&nbsp;html: "&lt;strong&gt;it works!&lt;/strong&gt;",{"\n"}
+            &nbsp;&nbsp;from: &quot;hello@example.com&quot;,{"\n"}
+            &nbsp;&nbsp;to: [&quot;user@email.com&quot;],{"\n"}
+            &nbsp;&nbsp;subject: &quot;Hello&quot;,{"\n"}
+            &nbsp;&nbsp;html: &quot;&lt;strong&gt;it works!&lt;/strong&gt;&quot;,{"\n"}
             &#125;)
           </pre>
         </div>
